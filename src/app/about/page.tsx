@@ -46,10 +46,9 @@ export default function AboutPage() {
           </div>
           <div>
             <p className="eyebrow">What’s real today</p>
-            <h2 className="mt-3 text-[1.75rem] font-bold tracking-[-0.02em]">A waitlist, a working engine, a safety map.</h2>
+            <h2 className="mt-3 text-[1.75rem] font-bold tracking-[-0.02em]">A waitlist and a safety map.</h2>
             <p className="mt-4 text-[0.95rem] leading-relaxed text-muted">
-              The card is not issued yet. The readiness engine on this site runs real logic on fictional inputs. The safety
-              center runs on community reports. When a bank partner is signed, the disclosures on this site change before
+              The card is not issued yet. The safety center runs on community reports. When a bank partner is signed, the disclosures on this site change before
               anything else does.
             </p>
           </div>

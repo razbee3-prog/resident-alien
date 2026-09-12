@@ -42,8 +42,7 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
         <p className="eyebrow">You’re on the list</p>
         <p className="mt-2 font-display text-2xl font-bold tracking-[-0.02em]">Day one starts when you land.</p>
         <p className="mt-3 max-w-[32rem] text-[0.95rem] leading-relaxed text-muted">
-          We’ll write to {email} when the {segment} card opens for people from {country.name}. Until then, the readiness demo
-          shows exactly what we’ll read.
+          We’ll email {email} when the {segment} card opens for people from {country.name}.
         </p>
       </div>
     );
@@ -120,7 +119,7 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
         <Button type="submit" disabled={state.status === "sending"}>
           {state.status === "sending" ? "Saving…" : "Join the waitlist"}
         </Button>
-        <p className="text-xs text-faint">No spam. One email when your card opens, one when the demo becomes real.</p>
+        <p className="text-xs text-faint">No spam. One email when your card opens.</p>
       </div>
       {state.status === "error" ? (
         <p className="rounded-xl border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-bad" role="alert">

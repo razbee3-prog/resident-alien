@@ -1,8 +1,7 @@
 # Resident Alien — resident-alien.com
 
 Credit for people who just got here. A starter U.S. credit line on day one for international students and newly arrived
-professionals, then a coached path toward premium-card eligibility. This repository is the marketing site, the explainable
-readiness-engine demo, and the community safety center.
+professionals, then a coached path toward premium-card eligibility. This repository is the marketing site and the community safety center.
 
 Plan and positioning: [`docs/website-plan.md`](docs/website-plan.md). Original brief: [`docs/perplexity-brief.md`](docs/perplexity-brief.md).
 
@@ -21,10 +20,8 @@ Node 20+ (built on 22). Next.js 16, React 19, Tailwind v4, TypeScript.
 
 | Route | What it is |
 |---|---|
-| `/` | Landing: both cards in the hero with a country picker, the path to Platinum/Reserve, two segments side by side, coach dashboard, live demo slice, FAQ, waitlist |
-| `/students`, `/professionals` | Segment pages: evidence, month-by-month timeline, FAQ |
-| `/how-it-works` | Four steps, AI guardrails |
-| `/demo` | Explainable Financial Readiness Engine. Deterministic rules in `src/lib/readiness.ts`; fictional inputs only |
+| `/` | Landing: brand line, both cards with a country picker, three benefits, two segments, one stat, safety line, waitlist |
+| `/students`, `/professionals` | Segment pages: one card, what counts, month-by-month timeline, FAQ |
 | `/safety` | Crowdsourced enforcement-activity map, rights, hotlines |
 | `/waitlist`, `/about`, `/legal/*` | Form, mission, disclosures / privacy / terms |
 | `/api/waitlist` | POST. Stores a signup |

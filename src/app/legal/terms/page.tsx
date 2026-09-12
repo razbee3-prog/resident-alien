@@ -9,8 +9,6 @@ export default function TermsPage() {
       <p>By using this website you agree to the following. These terms cover the website only; a card agreement, when one exists, will be a separate document from the issuing bank.</p>
       <h2>Nothing here is advice</h2>
       <p>Content on this site is general information. It is not financial, legal, tax, or immigration advice, and it is not a substitute for a licensed professional who knows your situation.</p>
-      <h2>Demo tools</h2>
-      <p>The readiness engine is illustrative. Its outputs are not decisions, offers, or predictions about any lender.</p>
       <h2>Safety center</h2>
       <ul>
         <li>Report activity, never people. Don’t submit names, faces, license plates, or anything that identifies an individual.</li>

@@ -10,12 +10,10 @@ export function SingleCard({ segment }: { segment: Segment }) {
   const prefs = usePrefs();
   const country = findCountry(prefs.country) ?? defaultCountry;
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="w-[270px] rotate-[4deg] sm:w-[300px]">
+    <div className="flex flex-col items-center">
+      <CountryPicker variant="pill" label="Moving from" value={country} onChange={(c) => setPref("country", c.a2)} />
+      <div className="mt-10 w-[250px] rotate-[4deg] sm:w-[320px]">
         <ResidentCard segment={segment} country={country} />
-      </div>
-      <div className="w-full max-w-[340px]">
-        <CountryPicker value={country} onChange={(c) => setPref("country", c.a2)} />
       </div>
     </div>
   );

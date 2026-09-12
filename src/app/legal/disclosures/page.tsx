@@ -8,11 +8,6 @@ export default function DisclosuresPage() {
   return (
     <LegalPage eyebrow="Legal" title="Disclosures" updated="September 2026">
       <p>{disclosures.long}</p>
-      <h2>Readiness engine</h2>
-      <p>
-        The readiness score on this site is a demonstration. It is not a credit score, not a credit decision, and not an offer
-        of credit. It runs on inputs you type and does not pull any bureau, bank, or payroll data.
-      </p>
       <h2>Card names</h2>
       <p>
         American Express, Platinum, Chase, Sapphire Preferred, and Sapphire Reserve are trademarks of their respective owners.

@@ -24,8 +24,8 @@ export const segments: Record<Segment, SegmentContent> = {
     plural: "Professionals",
     pill: "PROFESSIONAL",
     href: "/professionals",
-    headline: "Six-figure job. Zero credit. Let’s fix the second part.",
-    sub: "Resident Alien turns your offer letter, payroll, and savings into a starter credit line on day one, then coaches your file toward Amex Platinum or Chase Sapphire Reserve eligibility in 12–24 months, not the years most newcomers waste.",
+    headline: "Your offer letter is your credit history.",
+    sub: "Open a U.S. credit line on a signed offer, before your first paycheck. Build from day one. Get to Platinum faster.",
     evidence: [
       "Offer letter and start date",
       "Salary, then payroll once it lands",
@@ -71,8 +71,8 @@ export const segments: Record<Segment, SegmentContent> = {
     plural: "Students",
     pill: "STUDENT",
     href: "/students",
-    headline: "A real credit file before you graduate.",
-    sub: "Resident Alien turns your enrollment, funding, and savings into a starter credit line before your first semester ends, then coaches your file so OPT and H-1B life start with a score instead of a blank.",
+    headline: "A real credit score before you graduate.",
+    sub: "Open a U.S. credit line on your I-20 and funding, before your first semester ends. Graduate with a score, not a blank.",
     evidence: [
       "I-20 and enrollment",
       "Scholarship, sponsor, or family funds",
