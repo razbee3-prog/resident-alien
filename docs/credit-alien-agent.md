@@ -91,7 +91,7 @@ curl -s localhost:3000/api/coach/simulate -H 'content-type: application/json' \
   -d '{"phone":"+14155550101","text":"Hi Credit Alien 👽 I'"'"'m a professional from IND. Help me build U.S. credit."}' | jq
 ```
 
-Each call returns the replies, the run summary, and the user's state (stage, goal, plan version, task, memories, summary, nudge). Walk the journey: prefill → `yes` → a goal → the context questions → the plan appears → `can I send $200 home this week?` → `what does utilization mean?` → an SSN-shaped message (redacted, warned) → `STOP`.
+Each call returns the replies, the run summary, and the user's state (stage, goal, plan version, task, memories, summary, nudge). `node scripts/coach-journey.mjs` walks a full scripted journey: prefill → `yes` → a goal → the context questions → the plan appears → a remittance question → a utilization question → an SSN-shaped message (redacted, warned) → an immigration question (referral) → `STOP`.
 
 Unit tests (`npm test`) cover the finance tools, PII redaction, the outbound guard, opt-out words, the immigration detector, the prefill parser, context completeness, bubble splitting, and phone normalization.
 
