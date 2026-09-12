@@ -76,10 +76,10 @@ Local development without Supabase writes the same tables to `.data/coach/*.json
 ## Setup
 
 1. Run `supabase/schema.sql` in the Supabase SQL editor (idempotent).
-2. Set env vars (see `.env.example`): `ANTHROPIC_API_KEY`, `SENDBLUE_API_KEY_ID`, `SENDBLUE_API_SECRET_KEY`, `SENDBLUE_WEBHOOK_SECRET`, `SENDBLUE_NUMBER`, `NEXT_PUBLIC_SENDBLUE_NUMBER`, `CRON_SECRET`.
+2. Set env vars (see `.env.example`): `ANTHROPIC_API_KEY` (or `ANTHROPIC_KEY`), `SENDBLUE_API_KEY` (or `SENDBLUE_API_KEY_ID`), `SENDBLUE_SECRET` (or `SENDBLUE_API_SECRET_KEY`), `SENDBLUE_NUMBER`, `SENDBLUE_WEBHOOK_SECRET`, `CRON_SECRET`. `SENDBLUE_BASE_URL` is optional.
 3. In Sendblue → Developer → Webhooks, add `https://<your-domain>/api/sendblue/webhook` with the same secret you put in `SENDBLUE_WEBHOOK_SECRET`.
 4. Deploy. `vercel.json` schedules `/api/cron/tick` daily at 16:00 UTC (Hobby allows one run a day; the job decides per user whether a weekly check-in is due). Vercel sends `Authorization: Bearer $CRON_SECRET`.
-5. The hero button appears once `NEXT_PUBLIC_SENDBLUE_NUMBER` is set.
+5. The hero button appears once `SENDBLUE_NUMBER` is set (it is read at build time, so redeploy after adding it).
 
 Function durations: the webhook route declares `maxDuration = 120` and the cron route `300`. Both are within Vercel's Fluid Compute limits on every plan.
 

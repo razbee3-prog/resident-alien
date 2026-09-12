@@ -5,8 +5,8 @@ export const site = {
   description:
     "Resident Alien turns the evidence newcomers already have into a starter U.S. credit line on day one, then coaches the file toward premium-card eligibility. For international students and newly arrived professionals.",
   contactEmail: "hello@resident-alien.com",
-  /** Sendblue line the "Chat with Credit Alien" button dials. Null hides the button. */
-  chatNumber: process.env.NEXT_PUBLIC_SENDBLUE_NUMBER || null,
+  /** Sendblue line the "Chat with Credit Alien" button dials (read server-side at build). Null hides the button. */
+  chatNumber: process.env.SENDBLUE_NUMBER || process.env.NEXT_PUBLIC_SENDBLUE_NUMBER || null,
 };
 
 export const disclosures = {

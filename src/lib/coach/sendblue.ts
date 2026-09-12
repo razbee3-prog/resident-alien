@@ -3,11 +3,12 @@ import { timingSafeEqual } from "node:crypto";
 import type { DeliveryReceipt, MessagingProvider } from "./types";
 import { normalizePhone, splitBubbles } from "./text";
 
-const BASE = "https://api.sendblue.com";
+const BASE = (process.env.SENDBLUE_BASE_URL || "https://api.sendblue.com").replace(/\/+$/, "");
 
+/** Env aliases: SENDBLUE_API_KEY_ID or SENDBLUE_API_KEY; SENDBLUE_API_SECRET_KEY or SENDBLUE_SECRET. */
 const cfg = {
-  keyId: process.env.SENDBLUE_API_KEY_ID,
-  secret: process.env.SENDBLUE_API_SECRET_KEY,
+  keyId: process.env.SENDBLUE_API_KEY_ID || process.env.SENDBLUE_API_KEY,
+  secret: process.env.SENDBLUE_API_SECRET_KEY || process.env.SENDBLUE_SECRET,
   number: process.env.SENDBLUE_NUMBER || process.env.NEXT_PUBLIC_SENDBLUE_NUMBER,
   webhookSecret: process.env.SENDBLUE_WEBHOOK_SECRET,
   dryRun: process.env.SENDBLUE_DRY_RUN === "1" || process.env.SENDBLUE_DRY_RUN === "true",

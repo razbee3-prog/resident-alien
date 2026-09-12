@@ -1,9 +1,12 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
+/** Accepts ANTHROPIC_API_KEY (SDK default) or ANTHROPIC_KEY. */
+const apiKey = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_KEY;
+
 let client: Anthropic | null = null;
 export function anthropic(): Anthropic {
-  if (!client) client = new Anthropic({ maxRetries: 2, timeout: 60_000 });
+  if (!client) client = new Anthropic({ apiKey, maxRetries: 2, timeout: 60_000 });
   return client;
 }
 
@@ -14,4 +17,4 @@ export const MODELS = {
   helper: "claude-haiku-4-5",
 } as const;
 
-export const anthropicConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
+export const anthropicConfigured = Boolean(apiKey);

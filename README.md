@@ -49,8 +49,8 @@ The hero's "Chat with Credit Alien" button opens Messages to our Sendblue line. 
 agent: onboarding with explicit consent, a versioned plan with one action a week, a daily internal monitor, a weekly
 check-in, and memory that survives the thread. Design, data model, setup, and testing: [`docs/credit-alien-agent.md`](docs/credit-alien-agent.md).
 
-Env: `ANTHROPIC_API_KEY`, `SENDBLUE_API_KEY_ID`, `SENDBLUE_API_SECRET_KEY`, `SENDBLUE_WEBHOOK_SECRET`, `SENDBLUE_NUMBER`,
-`NEXT_PUBLIC_SENDBLUE_NUMBER` (shows the button), `CRON_SECRET`. `SENDBLUE_DRY_RUN=1` logs instead of sending.
+Env: `ANTHROPIC_API_KEY` (or `ANTHROPIC_KEY`), `SENDBLUE_API_KEY`, `SENDBLUE_SECRET`, `SENDBLUE_NUMBER` (shows the
+button), `SENDBLUE_WEBHOOK_SECRET`, `CRON_SECRET`. `SENDBLUE_DRY_RUN=1` logs instead of sending.
 `npm test` runs the coach's unit tests.
 
 ## Safety center rules
