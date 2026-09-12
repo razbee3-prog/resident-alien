@@ -43,13 +43,9 @@ Built for awareness, not intervention. Reports carry a category, a note, and a l
 like plates, phone numbers, emails, links, or handles are rejected server-side. Reports expire after four hours. There are no
 accounts; a daily-salted hash of the connection address exists only for rate limiting (3 reports/hour, 5 signups/hour).
 
-Map tiles come from CARTO's dark basemap (free tier, attribution required). For real traffic switch to a paid CARTO plan,
-MapTiler, or self-hosted OpenFreeMap tiles in `src/components/safety/safety-map.tsx`.
-
-MapLibre spawns a module web worker from a URL relative to its own bundle, which the app bundler doesn't preserve, so the
-worker would load the page HTML and die (no reports would ever render). `scripts/copy-maplibre-worker.mjs` runs before
-`dev` and `build`, copies the worker and shared modules into `public/vendor/` (git-ignored), and the map points at them
-with `setWorkerUrl`.
+The map is a static SVG of the United States (Albers USA projection generated from us-atlas into `src/lib/us-states.json`). Hotspots
+in `src/lib/hotspots.ts` are illustrative, based on publicly reported operations, and are not live data. Community reports are
+projected onto the same map with d3-geo. No tile provider or API key is needed.
 
 ## Design system
 

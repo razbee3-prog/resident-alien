@@ -42,6 +42,3 @@ next-env.d.ts
 
 # local data written in dev without a database
 /.data/
-
-# vendored at build time by scripts/copy-maplibre-worker.mjs
-/public/vendor/

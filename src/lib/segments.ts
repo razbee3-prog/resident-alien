@@ -25,7 +25,7 @@ export const segments: Record<Segment, SegmentContent> = {
     pill: "PROFESSIONAL",
     href: "/professionals",
     headline: "Your offer letter is your credit history.",
-    sub: "Open a U.S. credit line on a signed offer, before your first paycheck. Build from day one. Get to Platinum faster.",
+    sub: "Open a U.S. credit line on a signed offer, before your first paycheck. Build from day one. Get to your choice of premium cards faster.",
     evidence: [
       "Offer letter and start date",
       "Salary, then payroll once it lands",

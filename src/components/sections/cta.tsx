@@ -3,7 +3,7 @@ import { WaitlistForm } from "@/components/waitlist-form";
 
 export function Cta() {
   return (
-    <Section id="waitlist">
+    <Section id="waitlist" className="scroll-mt-16">
       <Container className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center lg:gap-16">
         <div>
           <h2 className="text-[2.2rem] font-bold leading-[1] tracking-[-0.035em] md:text-[3.2rem]">Get on the list.</h2>

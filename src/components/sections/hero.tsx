@@ -1,6 +1,5 @@
 import { HeroCards } from "@/components/card/hero-cards";
 import { ButtonLink, Container } from "@/components/ui";
-import { disclosures } from "@/lib/site";
 
 export function Hero() {
   return (
@@ -15,14 +14,13 @@ export function Hero() {
           Land with credit.
         </h1>
         <p className="mx-auto mt-6 max-w-[30rem] text-lg leading-snug text-muted md:text-[1.35rem]">
-          A U.S. credit line you can open before you arrive. Build from day one. Get to Platinum faster.
+          A U.S. credit line you can open before you arrive. Build from day one. Get to your choice of premium credit cards faster.
         </p>
         <div className="mt-9 flex justify-center">
-          <ButtonLink href="/waitlist" size="lg">
+          <ButtonLink href="#waitlist" size="lg">
             Join the waitlist
           </ButtonLink>
         </div>
-        <p className="mt-5 text-xs text-faint">{disclosures.short}</p>
         <div className="mt-14">
           <HeroCards />
         </div>

@@ -4,7 +4,6 @@ import { Faq } from "@/components/sections/faq";
 import { Ladder, type Rung } from "@/components/sections/ladder";
 import { ButtonLink, Container, Section } from "@/components/ui";
 import { segments, type Segment } from "@/lib/segments";
-import { disclosures } from "@/lib/site";
 
 function toRungs(timeline: { month: string; step: string }[]): Rung[] {
   return timeline.map((t) => {
@@ -33,7 +32,6 @@ export function SegmentPage({ segment }: { segment: Segment }) {
               Join the waitlist
             </ButtonLink>
           </div>
-          <p className="mt-5 text-xs text-faint">{disclosures.short}</p>
           <div className="mt-14">
             <SingleCard segment={segment} />
           </div>
