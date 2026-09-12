@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeroCards } from "@/components/card/hero-cards";
+import { ChatCta } from "@/components/chat-cta";
 import { Arrow, ButtonLink, Container, Eyebrow } from "@/components/ui";
 import { disclosures } from "@/lib/site";
 
@@ -24,6 +25,7 @@ export function Hero() {
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <ButtonLink href="/waitlist">Join the waitlist</ButtonLink>
+            <ChatCta />
             <ButtonLink href="/demo" variant="ghost">
               Run the readiness demo
             </ButtonLink>

@@ -45,3 +45,6 @@ next-env.d.ts
 
 # vendored at build time by scripts/copy-maplibre-worker.mjs
 /public/vendor/
+
+# committed template for env files
+!.env.example
