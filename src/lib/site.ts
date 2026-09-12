@@ -1,6 +1,6 @@
 export const site = {
   name: "Resident Alien",
-  url: "https://resident-alien.com",
+  url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://resident-alien.com",
   tagline: "You moved countries. Your credit didn’t.",
   description:
     "Resident Alien turns the evidence newcomers already have into a starter U.S. credit line on day one, then coaches the file toward premium-card eligibility. For international students and newly arrived professionals.",
