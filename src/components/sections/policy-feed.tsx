@@ -8,18 +8,19 @@ const tagTone: Record<FeedTag, string> = {
   "All visas": "border-hairline-strong text-muted",
 };
 
-export function PolicyFeed({ limit, id = "changes", showAllLink = true }: { limit?: number; id?: string; showAllLink?: boolean }) {
-  const items = limit ? policyFeed.slice(0, limit) : policyFeed;
+export function PolicyFeed({ limit, id = "changes", showAllLink = true, title = "What’s changing." }: { limit?: number; id?: string; showAllLink?: boolean; title?: string }) {
+  const sorted = [...policyFeed].sort((a, b) => b.date.localeCompare(a.date));
+  const items = limit ? sorted.slice(0, limit) : sorted;
   return (
-    <Section id={id} className="scroll-mt-16">
+    <Section id={id} className="scroll-mt-16" hairline={false}>
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-[2.2rem] font-bold leading-[1] tracking-[-0.035em] md:text-[3.2rem]">What’s changing.</h2>
+            <h2 className="text-[2.2rem] font-bold leading-[1] tracking-[-0.035em] md:text-[3.2rem]">{title}</h2>
             <p className="mt-3 max-w-[34rem] text-lg text-muted">Policy moves that touch H-1B workers and F-1 students, one line each. Not legal advice.</p>
           </div>
           {showAllLink && limit ? (
-            <Link href="/safety#changes" className="group inline-flex items-center gap-2 text-sm font-medium text-ink">
+            <Link href="/news" className="group inline-flex items-center gap-2 text-sm font-medium text-ink">
               All updates <Arrow className="transition-transform group-hover:translate-x-0.5" />
             </Link>
           ) : null}

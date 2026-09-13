@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Rights } from "@/components/safety/rights";
-import { PolicyFeed } from "@/components/sections/policy-feed";
 import { SafetyApp } from "@/components/safety/safety-app";
 import { Container, Eyebrow } from "@/components/ui";
 import { disclosures } from "@/lib/site";
@@ -20,8 +19,7 @@ export default function SafetyPage() {
               <Eyebrow>Safety center</Eyebrow>
               <h1 className="mt-4 text-[2.6rem] font-bold leading-[1] tracking-[-0.035em] sm:text-[3.4rem]">Know what’s happening around you.</h1>
               <p className="mt-6 max-w-[38rem] text-lg leading-relaxed text-muted">
-                Reported enforcement hotspots and community reports on one map, the policy changes that touch your status, and your
-                rights one scroll away. Kept separate from your money, by design.
+                Reported enforcement hotspots and community reports on one map, and your rights one scroll away. Kept separate from your money, by design.
               </p>
             </div>
           </div>
@@ -33,7 +31,6 @@ export default function SafetyPage() {
           </div>
         </Container>
       </section>
-      <PolicyFeed showAllLink={false} />
       <Rights />
     </>
   );

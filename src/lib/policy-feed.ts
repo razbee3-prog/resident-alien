@@ -56,7 +56,7 @@ export const policyFeed: FeedItem[] = [
     source: { name: "CNBC", url: "https://www.cnbc.com/2026/06/08/trump-h1b-visa-fee-blocks.html" },
   },
   {
-    date: "2026-07-22",
+    date: "2026-08-01",
     label: "Aug 1, 2026",
     tags: ["All visas"],
     title: "African visa services moved to regional hubs.",
