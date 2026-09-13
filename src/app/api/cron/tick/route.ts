@@ -22,7 +22,14 @@ export async function GET(req: Request) {
 
   const today = isoDate();
   const nowIso = new Date().toISOString();
-  const users = await store.listActiveUsers();
+  let users;
+  try {
+    users = await store.listActiveUsers();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("tick: cannot read coach_users", e);
+    return NextResponse.json({ ok: false, error: message, hint: "Run supabase/schema.sql if the coach_* tables do not exist yet." }, { status: 500 });
+  }
   const out = { users: users.length, swept: 0, monitor: 0, notified: 0, weekly: 0, sent: 0, errors: [] as string[] };
 
   for (const user of users) {
