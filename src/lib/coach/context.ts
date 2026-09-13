@@ -1,7 +1,7 @@
 import "server-only";
 import * as store from "./store";
 import { daysBetween } from "./text";
-import type { CoachUser, Conversation, Goal, Memory, Message, Plan, Progress, Task } from "./types";
+import type { CoachUser, Connection, Conversation, CreditSnapshot, Goal, Memory, Message, Plan, Progress, Task } from "./types";
 
 /**
  * The context packet: assembled fresh every turn, intentionally small, and inspectable in coach_runs.packet.
@@ -15,6 +15,8 @@ export type Packet = {
   plan: { version: number; milestone: string | null; rationale: string } | null;
   task: { id: string; title: string; status: Task["status"]; due_in_days: number | null; success_condition: string } | null;
   nudge: boolean;
+  score: { score: number | null; model: string | null; bureau: string | null; as_of: string | null; source: string; recorded: string } | null;
+  connection: Connection["status"] | null;
   profile: CoachUser["profile"];
   memories: string[];
   summary: string;
@@ -23,13 +25,16 @@ export type Packet = {
 };
 
 export async function buildPacket(user: CoachUser, conv: Conversation, recent: Message[]): Promise<Packet> {
-  const [goal, plan, task, memories, progress] = await Promise.all([
+  const [goal, plan, task, memories, progress, snaps, connection] = await Promise.all([
     store.getActiveGoal(user.id),
     store.getActivePlan(user.id),
     store.getActiveTask(user.id),
     store.listMemories(user.id, 12),
     store.recentProgress(user.id, 4),
+    store.listSnapshots(user.id, 1),
+    store.getConnection(user.id),
   ]);
+  const latest: CreditSnapshot | undefined = snaps[0];
   const now = new Date().toISOString();
   return {
     now,
@@ -39,6 +44,8 @@ export async function buildPacket(user: CoachUser, conv: Conversation, recent: M
     plan: plan ? { version: plan.version, milestone: activeMilestone(plan), rationale: plan.rationale } : null,
     task: task ? { id: task.id, title: task.title, status: task.status, due_in_days: task.due_at ? daysBetween(now, task.due_at) : null, success_condition: task.success_condition } : null,
     nudge: conv.nudge,
+    score: latest ? { score: latest.score, model: latest.score_model, bureau: latest.bureau, as_of: latest.as_of, source: latest.source, recorded: latest.created_at.slice(0, 10) } : null,
+    connection: connection?.status ?? null,
     profile: user.profile,
     memories: memories.map(memLine),
     summary: conv.summary,
@@ -66,6 +73,9 @@ export function renderPacket(p: Packet, stageInstruction: string): string {
   if (p.plan) lines.push(`Plan v${p.plan.version} · active milestone: ${p.plan.milestone ?? "none"}`);
   if (p.task) lines.push(`This week: ${p.task.title} · ${p.task.status}${p.task.due_in_days !== null ? ` · due in ${p.task.due_in_days} day${p.task.due_in_days === 1 ? "" : "s"}` : ""} · done when: ${p.task.success_condition}`);
   else if (p.stage === "active") lines.push("This week: no active task (set one)");
+  if (p.score) lines.push(`Score on file: ${p.score.score ?? "unreadable"}${p.score.model ? ` ${p.score.model}` : ""}${p.score.bureau ? `, ${p.score.bureau}` : ""}${p.score.as_of ? `, as of ${p.score.as_of}` : ""} (via ${p.score.source.replace(/_/g, " ")}, read ${p.score.recorded})`);
+  else lines.push(`Score on file: none${p.connection ? ` · Credit Karma connection: ${p.connection}` : ""}`);
+  if (p.connection === "needs_relogin") lines.push("Credit Karma session expired; offer request_credit_link when relevant.");
   if (p.nudge) lines.push("NUDGE: the last few turns drifted from this week's action; steer back gently in this reply.");
   lines.push("");
   lines.push(`Onboarding stage: ${p.stage}`);

@@ -8,7 +8,7 @@ const Route = z.object({
   intent: z.string().describe("snake_case, 1-3 words, e.g. utilization_question, remittance_affordability, task_report, greeting"),
   skills: z.array(z.enum(["credit_coach", "plan_and_goals", "cash_flow", "smalltalk"])).min(1).max(2),
   sensitive: z.enum(["none", "immigration_status", "formal_dispute", "fraud", "hardship", "sensitive_data"]),
-  task_signal: z.enum(["none", "reports_done", "reports_blocked", "asks_about_task", "wants_new_goal"]),
+  task_signal: z.enum(["none", "reports_done", "reports_blocked", "asks_about_task", "wants_new_goal", "wants_score_check"]),
 });
 export type Route = z.infer<typeof Route>;
 
@@ -17,7 +17,7 @@ const SYSTEM = `You route inbound iMessages for a credit coach. Pick the minimal
 - plan_and_goals: goal changes, plan/milestone/weekly-task talk, reporting progress, "what should I do next".
 - cash_flow: affordability, how much to pay, sending money home, rent vs card, budgets.
 - smalltalk: greetings, thanks, jokes, off-topic.
-Return the intent, up to two skills, whether the message is sensitive, and whether it reports on the current weekly task.`;
+Return the intent, up to two skills, whether the message is sensitive, and whether it reports on the current weekly task. Use task_signal wants_score_check when they ask to check, connect, or track their credit score.`;
 
 export async function route(text: string, taskTitle: string | null): Promise<Route> {
   try {

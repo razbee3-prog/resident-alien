@@ -181,3 +181,41 @@ export interface MessagingProvider {
   typing(to: string): Promise<void>;
   markRead(to: string): Promise<void>;
 }
+
+export type Connection = {
+  id: string;
+  user_id: string;
+  provider: "credit_karma";
+  context_id: string | null;
+  status: "pending" | "active" | "needs_relogin" | "revoked";
+  last_ok_at: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LinkToken = {
+  token: string;
+  user_id: string;
+  connection_id: string | null;
+  session_id: string | null;
+  connect_url: string | null;
+  live_view_url: string | null;
+  device: "laptop" | "phone" | null;
+  status: "issued" | "opened" | "completed" | "expired";
+  expires_at: string;
+  created_at: string;
+};
+
+export type CreditSnapshot = {
+  id: string;
+  user_id: string;
+  source: string;
+  score: number | null;
+  score_model: string | null;
+  bureau: string | null;
+  as_of: string | null;
+  confidence: string | null;
+  extract: unknown;
+  created_at: string;
+};

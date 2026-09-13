@@ -201,3 +201,51 @@ alter table coach_progress enable row level security;
 alter table coach_runs enable row level security;
 alter table coach_jobs enable row level security;
 alter table coach_events enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- Credit Alien: score source via a hosted browser the user logs into (demo), and score history.
+-- ---------------------------------------------------------------------------
+
+create table if not exists coach_connections (
+  id uuid primary key,
+  user_id uuid not null references coach_users(id) on delete cascade,
+  provider text not null default 'credit_karma',
+  context_id text,
+  status text not null default 'pending' check (status in ('pending','active','needs_relogin','revoked')),
+  last_ok_at timestamptz,
+  last_error text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, provider)
+);
+
+create table if not exists coach_link_tokens (
+  token text primary key,
+  user_id uuid not null references coach_users(id) on delete cascade,
+  connection_id uuid references coach_connections(id) on delete cascade,
+  session_id text,
+  connect_url text,
+  live_view_url text,
+  device text,
+  status text not null default 'issued' check (status in ('issued','opened','completed','expired')),
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists coach_credit_snapshots (
+  id uuid primary key,
+  user_id uuid not null references coach_users(id) on delete cascade,
+  source text not null,
+  score integer,
+  score_model text,
+  bureau text,
+  as_of text,
+  confidence text,
+  extract jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists coach_credit_snapshots_user_idx on coach_credit_snapshots (user_id, created_at desc);
+
+alter table coach_connections enable row level security;
+alter table coach_link_tokens enable row level security;
+alter table coach_credit_snapshots enable row level security;

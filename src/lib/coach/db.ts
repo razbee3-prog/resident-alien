@@ -93,6 +93,8 @@ const uniqueKeys: Record<string, string[][]> = {
   coach_messages: [["message_handle"]],
   coach_plans: [["user_id", "version"]],
   coach_jobs: [["user_id", "kind", "run_date"]],
+  coach_connections: [["user_id", "provider"]],
+  coach_link_tokens: [["token"]],
 };
 const locks = new Map<string, number>();
 

@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "./db";
-import type { CoachEvent, CoachUser, Conversation, Goal, Job, Memory, Message, Plan, Progress, Run, Task } from "./types";
+import type { CoachEvent, CoachUser, Connection, Conversation, CreditSnapshot, Goal, Job, LinkToken, Memory, Message, Plan, Progress, Run, Task } from "./types";
 
 const now = () => new Date().toISOString();
 const uuid = () => crypto.randomUUID();
@@ -235,4 +235,60 @@ export async function finishJob(id: string, status: "done" | "failed", result: u
 export async function insertEvent(userId: string | null, kind: CoachEvent["kind"], detail: unknown): Promise<void> {
   const row: CoachEvent = { id: uuid(), user_id: userId, kind, detail, created_at: now() };
   await db.insert("coach_events", row);
+}
+
+/* ------------------------- credit connections / links ------------------------- */
+
+export async function getConnection(userId: string, provider: Connection["provider"] = "credit_karma"): Promise<Connection | null> {
+  return (await db.select<Connection>("coach_connections", { eq: { user_id: userId, provider }, limit: 1 }))[0] ?? null;
+}
+
+export async function ensureConnection(userId: string, provider: Connection["provider"] = "credit_karma"): Promise<Connection> {
+  const existing = await getConnection(userId, provider);
+  if (existing) return existing;
+  const row: Connection = { id: uuid(), user_id: userId, provider, context_id: null, status: "pending", last_ok_at: null, last_error: null, created_at: now(), updated_at: now() };
+  const inserted = await db.insert("coach_connections", row);
+  return inserted ?? (await getConnection(userId, provider))!;
+}
+
+export async function updateConnection(id: string, patch: Partial<Connection>): Promise<Connection | null> {
+  return (await db.update<Connection>("coach_connections", { id }, { ...patch, updated_at: now() }))[0] ?? null;
+}
+
+export async function listActiveConnections(): Promise<Connection[]> {
+  return db.select<Connection>("coach_connections", { eq: { status: "active" } });
+}
+
+export async function issueLinkToken(userId: string, connectionId: string, ttlMinutes = 15): Promise<LinkToken> {
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  const token = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  const row: LinkToken = { token, user_id: userId, connection_id: connectionId, session_id: null, connect_url: null, live_view_url: null, device: null, status: "issued", expires_at: new Date(Date.now() + ttlMinutes * 60_000).toISOString(), created_at: now() };
+  await db.insert("coach_link_tokens", row);
+  return row;
+}
+
+export function linkState(link: LinkToken | null): "missing" | "expired" | "completed" | "open" {
+  if (!link) return "missing";
+  if (link.status === "completed") return "completed";
+  if (link.status === "expired" || new Date(link.expires_at).getTime() < Date.now()) return "expired";
+  return "open";
+}
+
+export async function getLinkToken(token: string): Promise<LinkToken | null> {
+  return (await db.select<LinkToken>("coach_link_tokens", { eq: { token }, limit: 1 }))[0] ?? null;
+}
+
+export async function updateLinkToken(token: string, patch: Partial<LinkToken>): Promise<LinkToken | null> {
+  return (await db.update<LinkToken>("coach_link_tokens", { token }, patch))[0] ?? null;
+}
+
+export async function insertSnapshot(userId: string, input: { source: string; score: number | null; score_model: string | null; bureau: string | null; as_of: string | null; confidence: string | null; extract: unknown }): Promise<CreditSnapshot> {
+  const row: CreditSnapshot = { id: uuid(), user_id: userId, created_at: now(), ...input };
+  await db.insert("coach_credit_snapshots", row);
+  return row;
+}
+
+export async function listSnapshots(userId: string, limit = 5): Promise<CreditSnapshot[]> {
+  return db.select<CreditSnapshot>("coach_credit_snapshots", { eq: { user_id: userId }, order: { col: "created_at", asc: false }, limit });
 }

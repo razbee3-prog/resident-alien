@@ -1,5 +1,8 @@
 import "server-only";
+import { browserEnabled, refreshConnection } from "./browser";
 import { buildPacket, renderPacket } from "./context";
+import { scoreDelta } from "./score-page";
+import { site } from "@/lib/site";
 import { agentLoop } from "./llm";
 import { outboundProblems } from "./policy";
 import * as store from "./store";
@@ -14,6 +17,7 @@ const NO_MESSAGE = "NO_MESSAGE";
 export async function runWeeklyCheckin(user: CoachUser, provider: MessagingProvider): Promise<{ sent: boolean; text: string | null; runId: string }> {
   const t0 = Date.now();
   const runId = crypto.randomUUID();
+  const scoreUpdate = await refreshScore(user);
   const conv = await store.getConversation(user.id);
   const recent = await store.recentMessages(user.id, 8);
   const packet = await buildPacket(user, conv, recent);
@@ -22,9 +26,9 @@ export async function runWeeklyCheckin(user: CoachUser, provider: MessagingProvi
     "1. If this week's task is done or the user reported it done, call complete_task. If it is overdue with no progress, call complete_task(skipped) and pick something smaller.",
     "2. If a replan_if condition is met (see memories and progress), call create_plan_version with a rationale that names the change.",
     "3. Call set_weekly_task with the one safest highest-value action for the coming week, unless the current task is still valid and not overdue.",
-    `4. Then write ONE short message (under 300 characters): this week's action, the why in one clause, and a light question or "reply DONE when it's set". If nothing meaningful changed and the current task is still valid and not overdue, reply with exactly ${NO_MESSAGE}.`,
+    `4. Then write ONE short message (under 300 characters): this week's action, the why in one clause, and a light question or "reply DONE when it's set". If a SCORE UPDATE below is marked material, lead with it in one clause (score, model, date). If it says the Credit Karma session expired, include the link and ask them to open it on a laptop. If nothing meaningful changed and the current task is still valid and not overdue, reply with exactly ${NO_MESSAGE}.`,
   ].join("\n");
-  const userTurn = `${renderPacket(packet, "")}\n\n${instruction}`;
+  const userTurn = `${renderPacket(packet, "")}\n\n${scoreUpdate ? `SCORE UPDATE: ${scoreUpdate}\n\n` : ""}${instruction}`;
 
   const loop = await agentLoop({ user, skills: ["plan_and_goals"], userTurn });
   let text: string | null = loop.text.trim();
@@ -42,4 +46,29 @@ export async function runWeeklyCheckin(user: CoachUser, provider: MessagingProvi
   await store.updateUser(user.id, { next_checkin_at: next.toISOString() });
   await store.insertRun({ id: runId, user_id: user.id, trigger: "weekly", intent: "weekly_checkin", skills: ["plan_and_goals"], packet, tool_calls: loop.log, model: loop.model, usage: loop.usage, policy: null, response: text, error: loop.refused ? "refusal" : null, duration_ms: Date.now() - t0 });
   return { sent: Boolean(text), text, runId };
+}
+
+/** Re-read the score through the stored Credit Karma session. Returns a line for the prompt, or null. Never throws. */
+async function refreshScore(user: CoachUser): Promise<string | null> {
+  if (!browserEnabled) return null;
+  try {
+    const conn = await store.getConnection(user.id);
+    if (!conn || conn.status !== "active" || !conn.context_id) return null;
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("refresh timed out")), 90_000));
+    const read = await Promise.race([refreshConnection(conn.context_id), timeout]);
+    if (!read.loggedIn) {
+      await store.updateConnection(conn.id, { status: "needs_relogin", last_error: read.extraction?.notes ?? "login page" });
+      const link = await store.issueLinkToken(user.id, conn.id, 60 * 24);
+      return `Credit Karma session expired; not material by itself. New link (laptop, valid 24 h): ${site.url}/connect/${link.token}`;
+    }
+    const x = read.extraction!;
+    const previous = (await store.listSnapshots(user.id, 1))[0] ?? null;
+    await store.insertSnapshot(user.id, { source: "credit_karma_browser", score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, confidence: x.confidence, extract: x });
+    await store.updateConnection(conn.id, { last_ok_at: new Date().toISOString(), last_error: null });
+    const { delta, material } = scoreDelta(x.score, previous?.score ?? null);
+    return `score ${x.score ?? "unreadable"}${x.score_model ? ` ${x.score_model}` : ""}${x.bureau ? `, ${x.bureau}` : ""}${x.as_of ? `, as of ${x.as_of}` : ""}; previous ${previous?.score ?? "none"}${delta !== null ? ` (${delta >= 0 ? "+" : ""}${delta})` : ""}; ${material ? "MATERIAL" : "not material"}`;
+  } catch (e) {
+    console.warn("score refresh failed", e);
+    return null;
+  }
 }

@@ -1,6 +1,8 @@
 import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { assess, type ReadinessInput } from "@/lib/readiness";
+import { site } from "@/lib/site";
+import { browserEnabled } from "./browser";
 import { paymentRecommendation, safePayment, safeRemittance, utilization } from "./finance";
 import type { ToolName } from "./skills";
 import * as store from "./store";
@@ -202,6 +204,19 @@ export const toolDefinitions: Anthropic.Tool[] = [
     strict: true,
   },
   {
+    name: "request_credit_link",
+    description:
+      "Create a one-time link (valid 15 minutes) where the user logs into Credit Karma on a LAPTOP so you can read their score and re-check it weekly. Use when they ask to check or connect their score, or when offering to track the score once a plan exists. Returns the URL to put in your reply.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false, required: [] },
+    strict: true,
+  },
+  {
+    name: "get_credit_snapshots",
+    description: "The user's recorded credit scores (newest first) with model, bureau, date, and source. The only place a score may come from.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false, required: [] },
+    strict: true,
+  },
+  {
     name: "assess_readiness",
     description: "Run the Resident Alien readiness engine on the profile (illustrative: path, starter-line range, safe-to-send, readiness for mainstream/mid-tier/premium). Not a credit decision.",
     input_schema: { type: "object", properties: {}, additionalProperties: false, required: [] },
@@ -342,6 +357,17 @@ export async function executeTool(name: string, rawInput: unknown, ctx: ToolCont
         return done(safeRemittance({ availableCash: Number(input.available_cash), protectedEssentials: Number(input.protected_essentials), emergencyReserve: Number(input.emergency_reserve), requiredDebtPayments: Number(input.required_debt_payments), transferFee: Number(input.transfer_fee) }));
       case "calc_payment_recommendation":
         return done(paymentRecommendation({ statementBalance: Number(input.statement_balance), currentBalance: Number(input.current_balance), creditLimit: Number(input.credit_limit), minimumPayment: Number(input.minimum_payment), availableCash: Number(input.available_cash), protectedEssentials: Number(input.protected_essentials), emergencyReserve: Number(input.emergency_reserve) }));
+      case "request_credit_link": {
+        if (!browserEnabled) return done("The score check is not enabled on this deployment. Tell the user they can text a screenshot of their score page instead, and coach from what they tell you.", false);
+        const conn = await store.ensureConnection(uid);
+        const link = await store.issueLinkToken(uid, conn.id);
+        return done({ url: `${site.url}/connect/${link.token}`, expires_in_minutes: 15, instructions: "Open on a laptop; log in to Credit Karma in the window; tap 'I'm logged in'." });
+      }
+      case "get_credit_snapshots": {
+        const snaps = await store.listSnapshots(uid, 5);
+        const conn = await store.getConnection(uid);
+        return done({ connection: conn ? { status: conn.status, last_ok_at: conn.last_ok_at } : null, snapshots: snaps.map((x) => ({ score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, source: x.source, recorded_at: x.created_at })) });
+      }
       case "assess_readiness": {
         const r = assess(readinessInput(profile));
         return done({ disclaimer: "Illustrative. Not a credit decision or offer.", score: r.score, path: r.pathLabel, illustrative_limit: r.limit, safe_to_send: r.safeToSend, runway_months: Math.round(r.runwayMonths * 10) / 10, next_unlock: r.nextUnlock, premium_eta: r.premiumEta, readiness: r.readiness, reasons: r.reasons.map((x) => x.text), as_of: new Date().toISOString(), source: "user_stated" });

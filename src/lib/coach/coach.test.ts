@@ -110,3 +110,16 @@ describe("text", () => {
     assert.equal(normalizePhone("hello"), null);
   });
 });
+
+describe("score page", () => {
+  it("detects login pages and score pages", async () => {
+    const { looksLikeLoginPage, scoreDelta } = await import("./score-page");
+    assert.equal(looksLikeLoginPage("https://www.creditkarma.com/auth/logon", ""), true);
+    assert.equal(looksLikeLoginPage("https://www.creditkarma.com/", "Log in to Credit Karma. Forgot password? Create an account"), true);
+    assert.equal(looksLikeLoginPage("https://www.creditkarma.com/", "Welcome back, Raz. Your score 612 VantageScore 3.0 · TransUnion · Updated today. Credit factors"), false);
+    assert.deepEqual(scoreDelta(612, null), { delta: null, material: true });
+    assert.deepEqual(scoreDelta(620, 612), { delta: 8, material: false });
+    assert.deepEqual(scoreDelta(640, 612), { delta: 28, material: true });
+    assert.deepEqual(scoreDelta(null, 612), { delta: null, material: false });
+  });
+});

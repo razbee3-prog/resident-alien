@@ -17,7 +17,9 @@ export type ToolName =
   | "calc_safe_payment"
   | "calc_safe_remittance"
   | "calc_payment_recommendation"
-  | "assess_readiness";
+  | "assess_readiness"
+  | "request_credit_link"
+  | "get_credit_snapshots";
 
 export type SkillName = "onboarding" | "credit_coach" | "plan_and_goals" | "cash_flow" | "smalltalk";
 
@@ -26,7 +28,7 @@ export const BASE_TOOLS: ToolName[] = ["get_state", "update_profile", "write_mem
 export const skills: Record<SkillName, { description: string; tools: ToolName[]; section: string }> = {
   onboarding: {
     description: "First contact: consent, goal, minimal context, plan v1.",
-    tools: ["set_goal", "create_plan_version", "set_weekly_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_safe_remittance"],
+    tools: ["set_goal", "create_plan_version", "set_weekly_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_safe_remittance", "request_credit_link"],
     section: `## Skill: onboarding
 - Follow the stage instruction exactly. One question per turn. Warm, brief, no lists.
 - Never guess a fact; ask. Record facts with update_profile the moment you learn them.
@@ -34,7 +36,7 @@ export const skills: Record<SkillName, { description: string; tools: ToolName[];
   },
   credit_coach: {
     description: "Credit education, newcomer navigation, report understanding, dispute triage.",
-    tools: ["calc_utilization", "calc_payment_recommendation", "complete_task", "set_weekly_task"],
+    tools: ["calc_utilization", "calc_payment_recommendation", "complete_task", "set_weekly_task", "request_credit_link", "get_credit_snapshots"],
     section: `## Skill: credit_coach
 - Teach from the knowledge sections only. If the answer is not there, say you are not sure and give the safe default.
 - When utilization or a payment comes up, call the calculator with the user's numbers; explain the result, do not do the math yourself.
@@ -44,7 +46,7 @@ export const skills: Record<SkillName, { description: string; tools: ToolName[];
   },
   plan_and_goals: {
     description: "Long-horizon planning: goals, milestones, weekly action, plan versions.",
-    tools: ["set_goal", "create_plan_version", "set_weekly_task", "complete_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_payment_recommendation"],
+    tools: ["set_goal", "create_plan_version", "set_weekly_task", "complete_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_payment_recommendation", "request_credit_link", "get_credit_snapshots"],
     section: `## Skill: plan_and_goals
 - Exactly one primary action for the current week. If the user completed or declined it, call complete_task, then set_weekly_task with the next safest highest-value action.
 - Material change (income, deadline, payment failure, account opened, reporting confirmed) → create_plan_version with a rationale that names the change. Never rewrite history; version it.
@@ -52,7 +54,7 @@ export const skills: Record<SkillName, { description: string; tools: ToolName[];
   },
   cash_flow: {
     description: "Affordability, safe payment, safe remittance, protect-the-essentials.",
-    tools: ["calc_safe_payment", "calc_safe_remittance", "calc_payment_recommendation", "calc_utilization", "assess_readiness"],
+    tools: ["calc_safe_payment", "calc_safe_remittance", "calc_payment_recommendation", "calc_utilization", "assess_readiness", "get_credit_snapshots"],
     section: `## Skill: cash_flow
 - Reserve rent, food, tuition, utilities, health, and the emergency buffer before any score-optimization payment.
 - Compute safe-to-send and safe-payment with the calculators from the user's stated numbers; if a number is missing, ask for it (one question).

@@ -97,6 +97,12 @@ Unit tests (`npm test`) cover the finance tools, PII redaction, the outbound gua
 
 Webhook check: post Sendblue's documented sample payload to `/api/sendblue/webhook` with and without the `sb-signing-secret` header; post the same `message_handle` twice and confirm `{"action":"duplicate"}` the second time.
 
+## Score source (demo): hosted browser the user logs into
+
+There is no card and no bureau contract yet. Behind `CREDIT_BROWSER_ENABLED=1` (plus `BROWSERBASE_API_KEY`, `BROWSERBASE_PROJECT_ID`), the coach can send a one-time link to `/connect/<token>` (15 minutes). On a laptop the page opens a Browserbase session in a live-view iframe; the user logs into Credit Karma themselves (nothing they type touches our servers), taps "I'm logged in", and `POST /api/connect/<token>/complete` navigates to the dashboard, screenshots it, and has Opus 5 read the score into a structured snapshot (`coach_credit_snapshots`). The session's cookies persist in a per-user Browserbase context (`coach_connections.context_id`, encrypted at rest there); the weekly check-in re-reads the score through that context and mentions it only when it is the first score or moved 10+ points. If the session has expired the weekly message carries a fresh link. Texting DISCONNECT deletes the context. Phones can't type into the remote browser, so the page asks for a laptop.
+
+Known limits: this is automated access to a consumer site and can break on bot defenses or policy changes; it is labeled "Demo" on the page and is not a customer path. The durable options are a consumer-permissioned credit API (Spinwheel, Experian Connect) through the `CreditDataProvider` adapter, or reading a screenshot the user texts (the same extractor handles it).
+
 ## Boundaries
 
 No payments, transfers, applications, account changes, or disputes happen by text. The coach describes the step and says a secure link will follow; that flow is not built yet. The Kikoff Enterprise adapter and reporting reconciliation from the architecture note are also not built; `coach_events` is where a monitor finding from a data provider would land.

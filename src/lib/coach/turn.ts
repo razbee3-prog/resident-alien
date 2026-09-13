@@ -1,4 +1,5 @@
 import "server-only";
+import { deleteContext } from "./browser";
 import { anthropicConfigured } from "./claude";
 import { buildPacket, renderPacket } from "./context";
 import { agentLoop } from "./llm";
@@ -85,6 +86,14 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   if (user.opted_out || !text) return finish(null, {});
   if (!anthropicConfigured) return finish(null, { error: "ANTHROPIC_API_KEY not set" });
 
+  // Hard route: DISCONNECT revokes the Credit Karma session without a model call.
+  if (/^\s*disconnect\b/i.test(text)) {
+    const conn = await store.getConnection(userId);
+    if (conn?.context_id) await deleteContext(conn.context_id);
+    if (conn) await store.updateConnection(conn.id, { status: "revoked", context_id: null });
+    return finish(conn && conn.status !== "revoked" ? "Done. I deleted the saved Credit Karma session and won’t re-check your score. Text “check my score” whenever you want to connect again." : "Nothing to disconnect right now. Text “check my score” if you want me to start tracking it.", { intent: "disconnect_credit" });
+  }
+
   // Hard route: individual immigration/status questions never reach the model.
   if (user.onboarding_stage === "active" && isImmigrationStatusQuestion(text)) {
     await store.insertEvent(userId, "escalation", { reason: "immigration_question", text: text.slice(0, 200) });
@@ -116,6 +125,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     if ((routed.task_signal === "reports_done" || routed.task_signal === "reports_blocked" || routed.task_signal === "wants_new_goal") && !skills.includes("plan_and_goals")) {
       skills = [...skills, "plan_and_goals"];
     }
+    if (routed.task_signal === "wants_score_check" && !skills.includes("credit_coach")) skills = [...skills, "credit_coach"];
   }
 
   const conv = await store.getConversation(userId);
