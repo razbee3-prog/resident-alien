@@ -49,6 +49,15 @@ export async function listActiveUsers(): Promise<CoachUser[]> {
   return db.select<CoachUser>("coach_users", { eq: { onboarding_stage: "active", opted_out: false } });
 }
 
+/** Users with inbound messages nobody has processed yet (any stage). */
+export async function listUsersWithUnprocessed(olderThanMs = 0): Promise<CoachUser[]> {
+  const cutoff = new Date(Date.now() - olderThanMs).toISOString();
+  const pending = await db.select<Message>("coach_messages", { eq: { direction: "in" }, isNull: ["processed_at"], lte: { created_at: cutoff }, order: { col: "created_at", asc: true }, limit: 200 });
+  const ids = [...new Set(pending.map((m) => m.user_id))];
+  const users = await Promise.all(ids.map((id) => getUser(id)));
+  return users.filter((u): u is CoachUser => Boolean(u));
+}
+
 /* ----------------------------- conversation ----------------------------- */
 
 function emptyConversation(user_id: string): Conversation {

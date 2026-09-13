@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { anthropicConfigured, MODELS } from "@/lib/coach/claude";
 import { coachAvailable, db } from "@/lib/coach/db";
 import { sendblueBaseUrl, sendblueMode, webhookSecretSource } from "@/lib/coach/sendblue";
+import * as store from "@/lib/coach/store";
+import { runTurn } from "@/lib/coach/turn";
 import type { CoachEvent, Message, Run } from "@/lib/coach/types";
 import { storageMode } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 120;
 
 /** Operator diagnostics (bearer CRON_SECRET). Never returns secrets or message bodies beyond a short prefix. */
 export async function GET(req: Request) {
@@ -71,4 +74,37 @@ function describeSupabaseKey(key: string | undefined): string {
   } catch {
     return "jwt:unparseable";
   }
+}
+
+/** Operator actions (bearer CRON_SECRET). `sweep` processes every unprocessed inbound message right now and reports errors. */
+export async function POST(req: Request) {
+  const auth = req.headers.get("authorization");
+  const secret = process.env.CRON_SECRET;
+  if (!secret || auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false }, { status: 401 });
+  if (!coachAvailable) return NextResponse.json({ ok: false, error: "coach not configured" }, { status: 503 });
+  let body: { action?: string };
+  try {
+    body = (await req.json()) as { action?: string };
+  } catch {
+    body = {};
+  }
+  if (body.action !== "sweep") return NextResponse.json({ ok: false, error: "unknown action" }, { status: 400 });
+
+  const results: unknown[] = [];
+  const errors: string[] = [];
+  let users;
+  try {
+    users = await store.listUsersWithUnprocessed(0);
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: `list: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
+  }
+  for (const user of users) {
+    try {
+      const r = await runTurn(user.id, { debounceMs: 0 });
+      results.push({ user: user.id, turns: r.map((x) => ({ runId: x.runId, replied: x.replied, stage: x.stage, error: x.error })) });
+    } catch (e) {
+      errors.push(`${user.id}: ${e instanceof Error ? `${e.message}\n${e.stack?.split("\n").slice(0, 4).join(" | ")}` : String(e)}`);
+    }
+  }
+  return NextResponse.json({ ok: errors.length === 0, users: users.length, results, errors });
 }
