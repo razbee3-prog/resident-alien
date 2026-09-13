@@ -153,6 +153,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   let issuedLinkUrl: string | null = null;
   const wantsScore = routed ? routed.task_signal === "wants_score_check" : stage === "connect" && /score|karma|log+ed|connect|done|did it|finished|read it/i.test(text);
   if (wantsScore && !screenshotNote) {
+    await provider.typing(user.phone).catch(() => {}); // the read takes 15 s or more; show the dots meanwhile
     const read = await readThroughConnection(user, { timeoutMs: 60_000, relinkTtlMinutes: 15, allowPending: true });
     if (read?.kind === "fresh") {
       if (stage === "active" && !followup) notes.push(`Fresh Credit Karma read just now through the saved session: ${read.line}. Quote it with model, bureau, and date and tie it to the plan. No new link is needed; do not call request_credit_link.`);

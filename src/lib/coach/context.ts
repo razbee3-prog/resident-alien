@@ -82,7 +82,8 @@ export function renderPacket(p: Packet, stageInstruction: string): string {
   lines.push(`Onboarding stage: ${p.stage}`);
   if (stageInstruction) lines.push(`Stage instruction: ${stageInstruction}`);
   lines.push("");
-  const prof = Object.entries(p.profile).filter(([, v]) => v !== undefined && v !== null);
+  // Bookkeeping keys (stage_hint, pending_followup) are for the code, not the coach.
+  const prof = Object.entries(p.profile).filter(([k, v]) => v !== undefined && v !== null && typeof v !== "object" && k !== "stage_hint");
   lines.push(`Profile: ${prof.length ? prof.map(([k, v]) => `${k}=${v}`).join(", ") : "empty"}`);
   if (p.memories.length) lines.push(`Memories:\n${p.memories.map((m) => `- ${m}`).join("\n")}`);
   if (p.progress.length) lines.push(`Recent progress:\n${p.progress.map((m) => `- ${m}`).join("\n")}`);
