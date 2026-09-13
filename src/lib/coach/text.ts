@@ -3,6 +3,14 @@
 export const BUBBLE_SOFT_MAX = 420;
 
 /** Split a reply into at most two iMessage bubbles at a paragraph boundary. */
+/** Where the model wrote a placeholder ("[link]", "{{link}}", "<link>") put the real URL; otherwise add it at the end. */
+export function placeLink(reply: string, url: string): string {
+  if (reply.includes(url)) return reply.replace(/\n{3,}/g, "\n\n").trim();
+  const placeholder = /\[[^\]\n]*link[^\]\n]*\]|\{\{[^}\n]*\}\}|<[^>\n]*link[^>\n]*>/gi;
+  const placed = placeholder.test(reply) ? reply.replace(placeholder, url) : `${reply.trim()}\n\n${url}`;
+  return placed.replace(/\n{3,}/g, "\n\n").trim();
+}
+
 export function splitBubbles(text: string, softMax = BUBBLE_SOFT_MAX): string[] {
   const t = text.trim();
   if (!t) return [];

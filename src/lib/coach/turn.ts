@@ -3,12 +3,14 @@ import { anthropicConfigured } from "./claude";
 import { buildPacket, renderPacket } from "./context";
 import { agentLoop } from "./llm";
 import { extractAndUpdate } from "./memory";
+import { expandNumberedReply } from "./options";
 import { browserEnabled } from "./browser-flag";
 import { connectedInstruction, effectiveStage, parseButtonPrefill, situationKnown, stageInstruction } from "./onboarding";
 import { IMMIGRATION_REFERRAL, OUTBOUND_FALLBACK, PII_WARNING, isImmigrationStatusQuestion, outboundProblems } from "./policy";
 import { route, type Route } from "./router";
 import { extractScore, fetchImage } from "./score-vision";
 import { sendblueProvider } from "./sendblue";
+import { placeLink } from "./text";
 import type { SkillName } from "./skills";
 import * as store from "./store";
 import type { CoachUser, Message, MessagingProvider, OnboardingStage } from "./types";
@@ -121,13 +123,18 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   const prefill = stage === "new" ? parseButtonPrefill(text) : undefined;
   if (!user.consent_messaging_at) user = await store.updateUser(userId, { consent_messaging_at: new Date().toISOString() });
 
+  // A bare digit answers the numbered options in the coach's last message; spell it out once for everything downstream.
+  const recent = (await store.recentMessages(userId, 14)).filter((m) => !ids.includes(m.id)).slice(-12);
+  const lastCoach = [...recent].reverse().find((m) => m.direction === "out")?.content ?? null;
+  const said = expandNumberedReply(text, lastCoach) ?? text;
+
   // Skills: onboarding until active, then routed.
   let routed: Route | null = null;
   let skills: SkillName[];
   const activeTask = await store.getActiveTask(userId);
   if (stage !== "active") skills = ["onboarding"];
   else {
-    routed = await route(text, activeTask?.title ?? null);
+    routed = await route(said, activeTask?.title ?? null, lastCoach);
     skills = routed.skills as SkillName[];
     // A task report needs the planning tools (complete_task + set_weekly_task) whatever else was routed.
     if ((routed.task_signal === "reports_done" || routed.task_signal === "reports_blocked" || routed.task_signal === "wants_new_goal") && !skills.includes("plan_and_goals")) {
@@ -137,7 +144,6 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   }
 
   const conv = await store.getConversation(userId);
-  const recent = (await store.recentMessages(userId, 14)).filter((m) => !ids.includes(m.id)).slice(-12);
   const packet = await buildPacket(user, conv, recent);
   let instruction = stageInstruction(stage, user.profile, { prefill, browserEnabled });
   const notes: string[] = [];
@@ -173,7 +179,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   if (piiFlagged) notes.push("Sensitive data in the user's message was removed and a security warning was already sent. Do not repeat the warning; do not ask for the data.");
   if (routed?.sensitive && routed.sensitive !== "none" && routed.sensitive !== "sensitive_data") notes.push(`Router flagged: ${routed.sensitive}. Follow the operations playbook and call flag_for_human if it applies.`);
   if (routed?.task_signal && routed.task_signal !== "none") notes.push(`Router: task_signal=${routed.task_signal}.`);
-  const userTurn = [renderPacket(packet, instruction), notes.length ? `Notes:\n${notes.map((n) => `- ${n}`).join("\n")}` : "", `NEW MESSAGE${pending.length > 1 ? "S" : ""} FROM USER:\n${text}`].filter(Boolean).join("\n\n");
+  const userTurn = [renderPacket(packet, instruction), notes.length ? `Notes:\n${notes.map((n) => `- ${n}`).join("\n")}` : "", `NEW MESSAGE${pending.length > 1 ? "S" : ""} FROM USER:\n${said}`].filter(Boolean).join("\n\n");
 
   await provider.markRead(user.phone).catch(() => {});
   await provider.typing(user.phone).catch(() => {});
@@ -201,8 +207,9 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     }
   }
   if (!reply) reply = "Got it. What would you like to tackle next?";
+  // The model sometimes writes "[link]" or "{{link}}" instead of the URL: put the real URL there, or at the end.
   const linkUrl = loop.effects.linkUrl ?? issuedLinkUrl;
-  if (linkUrl && !reply.includes(linkUrl)) reply = `${reply.replace(/\[[^\]]*link[^\]]*\]/gi, "").trim()}\n\n${linkUrl}`;
+  if (linkUrl) reply = placeLink(reply, linkUrl);
   if (piiFlagged) reply = `${PII_WARNING}\n\n${reply}`;
 
   // Stage advancement from tool effects and profile facts.
@@ -229,7 +236,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   try {
     const existing = await store.listMemories(userId, 20);
     const task = fx.taskSet ?? activeTask;
-    await extractAndUpdate({ user, conv, task, existing, userText: text, reply, toolNames: loop.log.map((l) => l.name) });
+    await extractAndUpdate({ user, conv, task, existing, userText: said, reply, toolNames: loop.log.map((l) => l.name) });
   } catch (e) {
     console.error("memory pass failed", e);
   }

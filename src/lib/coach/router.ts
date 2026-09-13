@@ -17,15 +17,16 @@ const SYSTEM = `You route inbound iMessages for a credit coach. Pick the minimal
 - plan_and_goals: goal changes, plan/milestone/weekly-task talk, reporting progress, "what should I do next".
 - cash_flow: affordability, how much to pay, sending money home, rent vs card, budgets.
 - smalltalk: greetings, thanks, jokes, off-topic.
-Return the intent, up to two skills, whether the message is sensitive, and whether it reports on the current weekly task. Use task_signal wants_score_check when they ask to check, connect, or track their credit score.`;
+Return the intent, up to two skills, whether the message is sensitive, and whether it reports on the current weekly task. Use task_signal wants_score_check when they ask to check, connect, or track their credit score.
+A message that is just a number (or arrives expanded as "picked option N: …") selects that option from the coach's previous message: classify it as if the user had typed the option text. After "1. Done" a "1" is reports_done; after "2. Not yet, remind me" a "2" is reports_blocked.`;
 
-export async function route(text: string, taskTitle: string | null): Promise<Route> {
+export async function route(text: string, taskTitle: string | null, lastCoachText: string | null = null): Promise<Route> {
   try {
     const res = await anthropic().messages.parse({
       model: MODELS.helper,
       max_tokens: 300,
       system: SYSTEM,
-      messages: [{ role: "user", content: `Current weekly task: ${taskTitle ?? "none"}\n\nMessage:\n${text}` }],
+      messages: [{ role: "user", content: `Current weekly task: ${taskTitle ?? "none"}\n\nCoach's previous message:\n${lastCoachText ?? "(none)"}\n\nUser's message:\n${text}` }],
       output_config: { format: zodOutputFormat(Route) },
     });
     if (res.parsed_output) return res.parsed_output;

@@ -48,6 +48,8 @@ iMessage → Sendblue → POST /api/sendblue/webhook
       loop if more inbound arrived, release lock
 ```
 
+Numbered options: when a question has a few discrete answers the coach lists them as `1.` `2.` `3.` lines (persona rule in `prompt.ts`; the stage instructions in `onboarding.ts` and the weekly check-in spell out their menus), ending with "Reply with a number, or just tell me." A reply that is only a digit is expanded once in `turn.ts` (`expandNumberedReply` in `options.ts`, from the coach's last outbound message) to "2 (picked option 2: …)" for the model, the Haiku router (which now also sees the coach's previous message), and the memory writer; the stored message stays as typed.
+
 ## Modules (`src/lib/coach/`)
 
 | File | Job |

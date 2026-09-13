@@ -116,6 +116,37 @@ describe("text", () => {
   });
 });
 
+describe("link placement", () => {
+  it("replaces placeholders with the URL and otherwise appends it", async () => {
+    const { placeLink } = await import("./text");
+    const url = "https://resident-alien.com/connect/abc";
+    assert.equal(placeLink("Log in here:\n{{link}}\n1. I'll do it now\n2. Skip", url), `Log in here:\n${url}\n1. I'll do it now\n2. Skip`);
+    assert.equal(placeLink("Log in here: [credit link]", url), `Log in here: ${url}`);
+    assert.equal(placeLink("Open this:\n<link>", url), `Open this:\n${url}`);
+    assert.equal(placeLink("Log in here.\n\n\n\n1. Now", url), `Log in here.\n\n1. Now\n\n${url}`);
+    assert.equal(placeLink(`Here: ${url}`, url), `Here: ${url}`);
+  });
+});
+
+describe("numbered options", () => {
+  it("reads a menu from the coach's message and expands a digit reply", async () => {
+    const { parseOptions, pickedOption, expandNumberedReply } = await import("./options");
+    const coach = "Where are you starting from?\n1. No U.S. credit yet\n2. Some credit, want to grow it\n3. Repairing after a setback\nReply with a number, or just tell me.";
+    assert.deepEqual(parseOptions(coach).map((o) => o.label), ["No U.S. credit yet", "Some credit, want to grow it", "Repairing after a setback"]);
+    assert.equal(expandNumberedReply("2", coach), "2 (picked option 2: Some credit, want to grow it)");
+    assert.equal(pickedOption("2.", coach)?.n, 2);
+    assert.equal(pickedOption(" option 3 ", coach)?.n, 3);
+    assert.equal(pickedOption("#1", coach)?.n, 1);
+    assert.equal(pickedOption("4", coach), null);
+    assert.equal(pickedOption("22", coach), null);
+    assert.equal(pickedOption("2 cards", coach), null);
+    assert.equal(expandNumberedReply("2", "Your $212 statement is due on the 14th. 1 thing to do: pay it."), null);
+    assert.equal(expandNumberedReply("2", null), null);
+    // Numbers inside prose or a list that doesn't start at 1 are not a menu.
+    assert.deepEqual(parseOptions("Step 2. Pay the statement.\n3. Then wait."), []);
+  });
+});
+
 describe("sms deep link", () => {
   it("drafts the logged-in note for Messages", async () => {
     const { smsDraftHref, LOGGED_IN_DRAFT } = await import("../sms");
