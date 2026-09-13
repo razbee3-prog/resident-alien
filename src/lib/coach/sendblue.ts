@@ -16,15 +16,19 @@ const cfg = {
 };
 
 export const sendblueMode: "live" | "dry" = cfg.keyId && cfg.secret && cfg.number && !cfg.dryRun ? "live" : "dry";
+export const sendblueBaseUrl = BASE;
+export const webhookSecretSource: "explicit" | "api_secret" | "none" = process.env.SENDBLUE_WEBHOOK_SECRET ? "explicit" : cfg.webhookSecret ? "api_secret" : "none";
 
 /** Sendblue echoes the secret you configured on the webhook in the `sb-signing-secret` header (shared secret, not an HMAC). */
 export function verifyWebhook(req: Request): boolean {
   const expected = cfg.webhookSecret;
   if (!expected) return process.env.NODE_ENV !== "production";
-  const got = req.headers.get("sb-signing-secret") ?? "";
+  const got = req.headers.get("sb-signing-secret") ?? req.headers.get("x-sb-signing-secret") ?? "";
   const a = Buffer.from(got);
   const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
+  const ok = a.length === b.length && timingSafeEqual(a, b);
+  if (!ok) console.warn(`sendblue webhook signature mismatch (header present: ${Boolean(got)}; headers: ${[...req.headers.keys()].filter((h) => !h.startsWith("x-vercel")).join(",")})`);
+  return ok;
 }
 
 export type InboundMessage = {

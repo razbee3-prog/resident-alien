@@ -53,9 +53,16 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
 
   const finish = async (reply: string | null, extra: Partial<TurnResult> & { packet?: unknown; log?: unknown; usage?: unknown; model?: string | null; policy?: unknown }) => {
     await store.markProcessed(ids, runId);
+    let sendError: string | null = null;
     if (reply) {
-      const receipts = await provider.send(user.phone, reply);
-      await store.insertOutbound({ user_id: userId, handle: receipts[0]?.handle ?? null, content: reply, status: receipts[0]?.status ?? "SENT", run_id: runId });
+      try {
+        const receipts = await provider.send(user.phone, reply);
+        await store.insertOutbound({ user_id: userId, handle: receipts[0]?.handle ?? null, content: reply, status: receipts[0]?.status ?? "SENT", run_id: runId });
+      } catch (e) {
+        sendError = `send_failed: ${e instanceof Error ? e.message : String(e)}`;
+        console.error("coach send failed", e);
+        await store.insertEvent(userId, "delivery_error", { run_id: runId, error: sendError }).catch(() => {});
+      }
     }
     await store.insertRun({
       id: runId,
@@ -69,7 +76,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
       usage: extra.usage ?? null,
       policy: extra.policy ?? null,
       response: reply,
-      error: extra.error ?? null,
+      error: [extra.error, sendError].filter(Boolean).join("; ") || null,
       duration_ms: Date.now() - t0,
     });
     return { ...base, ...extra, replied: Boolean(reply), reply, stage: (extra.stage ?? user.onboarding_stage) as OnboardingStage } as TurnResult;
@@ -164,9 +171,13 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
 
   const result = await finish(reply, { stage: nextStage, skills, intent: routed?.intent ?? (stage === "active" ? null : `onboarding_${stage}`), packet, log: loop.log, usage: loop.usage, model: loop.model, policy, error: loop.refused ? "refusal" : null });
 
-  // Post-turn memory pass (async-safe: we are already inside after()).
-  const existing = await store.listMemories(userId, 20);
-  const task = fx.taskSet ?? activeTask;
-  await extractAndUpdate({ user, conv, task, existing, userText: text, reply, toolNames: loop.log.map((l) => l.name) });
+  // Post-turn memory pass (async-safe: we are already inside after()). Never let it mask a delivered reply.
+  try {
+    const existing = await store.listMemories(userId, 20);
+    const task = fx.taskSet ?? activeTask;
+    await extractAndUpdate({ user, conv, task, existing, userText: text, reply, toolNames: loop.log.map((l) => l.name) });
+  } catch (e) {
+    console.error("memory pass failed", e);
+  }
   return result;
 }

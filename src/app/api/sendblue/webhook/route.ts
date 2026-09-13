@@ -33,6 +33,7 @@ export async function POST(req: Request) {
 
   try {
     const r = await ingestInbound({ from: msg.from, handle: msg.handle, content: msg.content, service: msg.service, status: msg.status, optedOut: msg.optedOut, mediaUrl: msg.mediaUrl, dateSent: msg.dateSent });
+    console.info(`sendblue inbound ${msg.handle} from ${msg.from.slice(0, 5)}… → ${r.action}`);
     if (r.action === "queued") {
       const userId = r.user.id;
       after(async () => {
@@ -46,6 +47,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, action: r.action });
   } catch (e) {
     console.error("webhook ingest failed", e);
-    return NextResponse.json({ ok: false, error: "ingest failed" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: `ingest failed: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
   }
 }
