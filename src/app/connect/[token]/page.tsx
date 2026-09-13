@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Connect Credit Karma · Credit Alien
 
 export default async function ConnectPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const state = store.linkState(coachAvailable ? await store.getLinkToken(token) : null);
+  const state = store.linkState(coachAvailable ? await store.getLinkToken(token).catch((e) => (console.error("link lookup failed", e), null)) : null);
   const done = state === "completed";
   const expired = state === "missing" || state === "expired";
 
