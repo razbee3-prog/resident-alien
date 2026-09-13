@@ -206,7 +206,7 @@ export const toolDefinitions: Anthropic.Tool[] = [
   {
     name: "request_credit_link",
     description:
-      "Create a one-time link (valid 15 minutes) where the user logs into Credit Karma on a LAPTOP so you can read their score and re-check it weekly. Use when they ask to check or connect their score, or when offering to track the score once a plan exists. Returns the URL to put in your reply.",
+      "Create a one-time link (valid 15 minutes) where the user logs into Credit Karma on a LAPTOP so you can read their score and re-check it weekly. Use when they ask to connect or track their score. Phone users can instead text a screenshot of their score card, which you read automatically. Returns the URL to put in your reply.",
     input_schema: { type: "object", properties: {}, additionalProperties: false, required: [] },
     strict: true,
   },

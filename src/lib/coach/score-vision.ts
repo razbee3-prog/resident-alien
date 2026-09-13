@@ -21,10 +21,12 @@ export type ScoreExtraction = z.infer<typeof ScoreExtraction>;
 
 const SYSTEM = `You read credit-monitoring pages for a coaching app. Report only what is visibly on the page. If the page is a login, verification, captcha, or error page, set logged_in false and score null. If two scores are shown (e.g. TransUnion and Equifax), report the first and mention the second in notes.`;
 
-export async function extractScore(input: { pngBase64?: string; imageUrl?: string; pageText?: string; provider: string }): Promise<ScoreExtraction> {
+export type ImageMediaType = "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+
+export async function extractScore(input: { pngBase64?: string; image?: { base64: string; mediaType: ImageMediaType }; pageText?: string; provider: string }): Promise<ScoreExtraction> {
   const content: Anthropic.ContentBlockParam[] = [];
   if (input.pngBase64) content.push({ type: "image", source: { type: "base64", media_type: "image/png", data: input.pngBase64 } });
-  else if (input.imageUrl) content.push({ type: "image", source: { type: "url", url: input.imageUrl } });
+  else if (input.image) content.push({ type: "image", source: { type: "base64", media_type: input.image.mediaType, data: input.image.base64 } });
   content.push({
     type: "text",
     text: `Provider: ${input.provider}.${input.pageText ? `\n\nVisible page text (may be truncated):\n${input.pageText.slice(0, 6000)}` : ""}\n\nExtract the score information.`,
@@ -41,3 +43,19 @@ export async function extractScore(input: { pngBase64?: string; imageUrl?: strin
 }
 
 export { looksLikeLoginPage } from "./score-page";
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+/** Fetch a texted image (Sendblue media URL) into base64 for the extractor. Supports data: URLs for tests. */
+export async function fetchImage(url: string): Promise<{ base64: string; mediaType: ImageMediaType } | null> {
+  const m = url.match(/^data:(image\/(?:png|jpeg|gif|webp));base64,(.+)$/);
+  if (m) return { base64: m[2], mediaType: m[1] as ImageMediaType };
+  const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) return null;
+  const type = (res.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
+  const mediaType = type === "image/jpg" ? "image/jpeg" : type;
+  if (!["image/png", "image/jpeg", "image/gif", "image/webp"].includes(mediaType)) return null;
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.byteLength > MAX_IMAGE_BYTES) return null;
+  return { base64: buf.toString("base64"), mediaType: mediaType as ImageMediaType };
+}

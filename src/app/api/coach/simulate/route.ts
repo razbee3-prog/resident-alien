@@ -17,9 +17,9 @@ export async function POST(req: Request) {
   if (process.env.NODE_ENV === "production" && process.env.COACH_SIMULATE !== "1") return NextResponse.json({ ok: false }, { status: 404 });
   if (!coachAvailable) return NextResponse.json({ ok: false, error: "coach not configured" }, { status: 503 });
 
-  let body: { phone?: string; text?: string };
+  let body: { phone?: string; text?: string; mediaUrl?: string };
   try {
-    body = (await req.json()) as { phone?: string; text?: string };
+    body = (await req.json()) as { phone?: string; text?: string; mediaUrl?: string };
   } catch {
     return NextResponse.json({ ok: false, error: "Send JSON." }, { status: 400 });
   }
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     async markRead() {},
   };
 
-  const r = await ingestInbound({ from: phone, handle: `sim_${crypto.randomUUID()}`, content: text, service: "iMessage", status: "RECEIVED", optedOut: false, mediaUrl: null, dateSent: new Date().toISOString() });
+  const r = await ingestInbound({ from: phone, handle: `sim_${crypto.randomUUID()}`, content: text, service: "iMessage", status: "RECEIVED", optedOut: false, mediaUrl: typeof body.mediaUrl === "string" ? body.mediaUrl : null, dateSent: new Date().toISOString() });
   const results = r.action === "queued" ? await runTurn(r.user.id, { provider, trigger: "simulate", debounceMs: 0 }) : [];
 
   const [user, goal, plan, task, memories, conv, progress] = await Promise.all([

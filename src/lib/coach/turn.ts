@@ -6,6 +6,7 @@ import { extractAndUpdate } from "./memory";
 import { isAffirmative, parseButtonPrefill, stageInstruction } from "./onboarding";
 import { IMMIGRATION_REFERRAL, OUTBOUND_FALLBACK, PII_WARNING, isImmigrationStatusQuestion, outboundProblems } from "./policy";
 import { route, type Route } from "./router";
+import { extractScore, fetchImage } from "./score-vision";
 import { sendblueProvider } from "./sendblue";
 import type { SkillName } from "./skills";
 import * as store from "./store";
@@ -135,6 +136,8 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   const packet = await buildPacket(user, conv, recent);
   const instruction = stageInstruction(instructionStage, user.profile, { prefill, consentPending });
   const notes: string[] = [];
+  const screenshotNote = await readTextedScreenshot(userId, pending);
+  if (screenshotNote) notes.push(screenshotNote);
   if (piiFlagged) notes.push("Sensitive data in the user's message was removed and a security warning was already sent. Do not repeat the warning; do not ask for the data.");
   if (routed?.sensitive && routed.sensitive !== "none" && routed.sensitive !== "sensitive_data") notes.push(`Router flagged: ${routed.sensitive}. Follow the operations playbook and call flag_for_human if it applies.`);
   if (routed?.task_signal && routed.task_signal !== "none") notes.push(`Router: task_signal=${routed.task_signal}.`);
@@ -192,4 +195,23 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     console.error("memory pass failed", e);
   }
   return result;
+}
+
+/** If the user texted an image, try to read a credit score off it and record a snapshot. Never throws. */
+async function readTextedScreenshot(userId: string, pending: Message[]): Promise<string | null> {
+  const urls = pending.map((m) => (m.payload as { media_url?: unknown } | null)?.media_url).filter((u): u is string => typeof u === "string" && u.length > 0);
+  if (urls.length === 0) return null;
+  try {
+    const image = await fetchImage(urls[urls.length - 1]);
+    if (!image) return "The user texted an attachment that could not be read as an image. If they meant to send a score screenshot, ask for a PNG or JPG of the score card.";
+    const x = await extractScore({ image, provider: "user screenshot (Credit Karma / Experian / bank app)" });
+    if (x.score === null) return `The user texted a screenshot but no score was legible (${x.notes}). Ask them for a screenshot of the score card itself.`;
+    const previous = (await store.listSnapshots(userId, 1))[0] ?? null;
+    await store.insertSnapshot(userId, { source: "screenshot", score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, confidence: x.confidence, extract: x });
+    const delta = previous?.score !== null && previous?.score !== undefined ? x.score - previous.score : null;
+    return `The user texted a screenshot of their score. Recorded snapshot: ${x.score}${x.score_model ? ` ${x.score_model}` : ""}${x.bureau ? `, ${x.bureau}` : ""}${x.as_of ? `, as of ${x.as_of}` : ""} (confidence ${x.confidence})${previous ? `; previous on file ${previous.score ?? "unreadable"}${delta !== null ? ` (${delta >= 0 ? "+" : ""}${delta})` : ""}` : "; first score on file"}. Confirm it back with model, bureau, and date, and tie it to the plan.`;
+  } catch (e) {
+    console.warn("screenshot read failed", e);
+    return null;
+  }
 }

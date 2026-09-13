@@ -35,7 +35,7 @@ export async function ingestInbound(input: IngestInput): Promise<IngestResult> {
     content,
     service: input.service,
     status: input.status,
-    payload: { pii: hits.map((h) => h.kind), media: Boolean(input.mediaUrl), date_sent: input.dateSent },
+    payload: { pii: hits.map((h) => h.kind), media: Boolean(input.mediaUrl), media_url: input.mediaUrl, date_sent: input.dateSent },
   });
   if (!message) return { user, message: null, action: "duplicate" };
   return { user, message, action: "queued" };

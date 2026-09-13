@@ -23,7 +23,7 @@ export function ConnectClient({ token }: { token: string }) {
     (async () => {
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         setPhase("phone");
-        setMessage("Open this link on a laptop. The remote browser can’t take a phone keyboard yet, and you’ll need to type your Credit Karma login.");
+        setMessage("Open this link on a laptop to connect Credit Karma once. On your phone, the fastest way is to text Credit Alien a screenshot of your score card.");
         return;
       }
       try {
