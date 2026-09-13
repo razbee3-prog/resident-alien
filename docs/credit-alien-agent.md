@@ -12,7 +12,7 @@ This document describes what was built, where it departs from the original archi
 | "Keep the goal in mind" | A goal header leads every context packet (goal, deadline, days left, active milestone, this week's task and status). A post-turn pass grades every exchange advance / neutral / off_track; three off-track turns near a due date set a `nudge` flag the prompt acts on | Stated intent is not a mechanism. This is |
 | Last 5 to 10 messages as live context | Last 12 raw messages plus a rolling summary refreshed after every turn | "yes" and "the second one" are meaningless without the thread |
 | Memory-write policy, no writer | `memory.ts`: after each turn, Haiku proposes memories with what they supersede; inferred facts are dropped unless high-confidence; duplicates are skipped | Someone has to write the memories |
-| Idempotency mentioned | Dedupe on `message_handle`, a per-user lock, a 2.5 s debounce so rapid texts get one reply, ack-then-`after()` so Sendblue's 45 s window is never hit | iMessage users double-text |
+| Idempotency mentioned | Dedupe on `message_handle`, a per-user lock, a short debounce so rapid texts get one reply, and a daily sweep for any message that never got a turn | iMessage users double-text |
 | No first-contact flow | Onboarding state machine: new → consent → goal → context → active. Each stage pins the one question to ask. The website button prefills segment and country | Consent has to be explicit; the plan needs five facts before it exists |
 | pgvector RAG, Temporal, BullMQ | Curated knowledge in the cached system prompt; one daily Vercel Cron plus a `coach_jobs` table | Nothing here needs a queue yet. Move knowledge to retrieval when it outgrows ~50k tokens |
 
@@ -25,9 +25,9 @@ iMessage → Sendblue → POST /api/sendblue/webhook
   verify sb-signing-secret (shared secret, timing-safe compare)
   ignore outbound status callbacks and group chats
   ingest: find/create user by phone, STOP/START handling, PII redaction (stored redacted), insert (unique handle)
-  ack 200, then after():
+  run the turn inline (Next's after() hook did not run on Vercel; a >45 s turn makes Sendblue retry, which dedupes):
     runTurn(user)
-      sleep 2.5 s (debounce), take per-user lock
+      sleep 1.5 s (debounce), take per-user lock
       load all unprocessed inbound messages as one turn
       hard route: immigration/status questions → referral, no model call
       stage machine decides onboarding step, or Haiku router picks skills

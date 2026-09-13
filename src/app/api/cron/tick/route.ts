@@ -32,13 +32,22 @@ export async function GET(req: Request) {
   }
   const out = { users: users.length, swept: 0, monitor: 0, notified: 0, weekly: 0, sent: 0, errors: [] as string[] };
 
-  for (const user of users) {
-    try {
-      const stale = await store.listUnprocessed(user.id);
-      if (stale.length && Date.now() - new Date(stale[0].created_at).getTime() > 10 * 60_000) {
+  // Sweep inbound messages that never got a turn (any onboarding stage), e.g. if the after-response work died.
+  try {
+    for (const user of await store.listUsersWithUnprocessed(2 * 60_000)) {
+      try {
         await runTurn(user.id, { debounceMs: 0 });
         out.swept += 1;
+      } catch (e) {
+        out.errors.push(`sweep ${user.id}: ${e instanceof Error ? e.message : String(e)}`);
       }
+    }
+  } catch (e) {
+    out.errors.push(`sweep: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  for (const user of users) {
+    try {
       const job = await store.claimJob(user.id, "daily_monitor", today);
       if (job) {
         try {

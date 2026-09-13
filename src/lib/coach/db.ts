@@ -27,6 +27,7 @@ export interface Db {
   /** Atomically take the per-user turn lock. */
   acquireLock(userId: string, untilIso: string): Promise<boolean>;
   releaseLock(userId: string): Promise<void>;
+  count(table: string): Promise<number>;
 }
 
 export const coachAvailable = storageMode !== "demo";
@@ -76,6 +77,11 @@ const liveDb: Db = {
   async releaseLock(userId) {
     const { error } = await supabase().from("coach_conversations").update({ lock_until: null }).eq("user_id", userId);
     if (error) throw new Error(`unlock: ${error.message}`);
+  },
+  async count(table) {
+    const { count, error } = await supabase().from(table).select("*", { count: "exact", head: true });
+    if (error) throw new Error(`${table} count: ${error.message}`);
+    return count ?? 0;
   },
 };
 
@@ -155,6 +161,9 @@ const localDb: Db = {
   async releaseLock(userId) {
     locks.delete(userId);
     await localDb.update("coach_conversations", { user_id: userId }, { lock_until: null });
+  },
+  async count(table) {
+    return (await readTable(table)).length;
   },
 };
 
