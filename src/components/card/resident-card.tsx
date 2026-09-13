@@ -86,18 +86,17 @@ export function ResidentCard({
           <div className="rcard-body">
             <div className="rcard-top">
               <span className="rcard-mark">RESIDENT ALIEN</span>
-              <span className="rcard-pill">{segment === "student" ? "STUDENT" : "PROFESSIONAL"}</span>
+              <div className="rcard-pinwrap">
+                <div className="rcard-pin">
+                  <Image src={flagSrc(country.a2)} alt="" width={36} height={24} unoptimized draggable={false} />
+                </div>
+                <span className="rcard-from">{country.a3}</span>
+              </div>
             </div>
 
             <div className="rcard-row">
               <div className="rcard-chip" aria-hidden="true">
                 <ChipContacts />
-              </div>
-              <div className="rcard-pinwrap">
-                <div className="rcard-pin">
-                  <Image src={flagSrc(country.a2)} alt="" width={36} height={24} unoptimized draggable={false} />
-                </div>
-                <span className="rcard-from">FROM · {country.a3}</span>
               </div>
             </div>
 

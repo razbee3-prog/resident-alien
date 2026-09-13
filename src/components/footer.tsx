@@ -17,6 +17,7 @@ const columns = [
       { href: "/safety", label: "Safety center" },
       { href: "/safety#rights", label: "Know your rights" },
       { href: "/safety#hotlines", label: "Hotlines" },
+      { href: "/news", label: "News" },
     ],
   },
   {
