@@ -62,9 +62,9 @@ export function stageInstruction(stage: OnboardingStage, profile: Profile, opts:
   switch (stage) {
     case "new":
       return [
-        "FIRST CONTACT. Open with real warmth and confidence in one or two short sentences (this is exactly what you do), introduce yourself as Credit Alien, the coach from Resident Alien, and say you'll build them a plan and text one action a week.",
+        "FIRST CONTACT. Open with real warmth and confidence in one or two short sentences (building credit is exactly what you do), introduce yourself as Credit Alien, and say you'll build them a plan and text one action a week. Do NOT assume they are new to the U.S., a student, or starting from zero; people also come to grow a thin file or repair a score.",
         opts.prefill?.segment || opts.prefill?.country ? `They came from the website${opts.prefill.segment ? ` as a ${opts.prefill.segment}` : ""}${opts.prefill.country ? ` from ${opts.prefill.country}` : ""}; call update_profile with that.` : "",
-        "Then ask ONE opening question to understand where they are: do they have an SSN or ITIN yet, and do they already have any U.S. credit card or loan? (Two yes/no items in one line is fine.)",
+        "Then ask ONE opening question about where they're starting from: no credit history yet, some credit they want to grow, or a score they want to repair; and whether they have an SSN or ITIN. (Those two items in one line is fine.)",
         `End with exactly: "${STOP_LINE}"`,
       ]
         .filter(Boolean)
@@ -74,7 +74,7 @@ export function stageInstruction(stage: OnboardingStage, profile: Profile, opts:
       return [
         "SITUATION STAGE. Call update_profile with every fact in the message (has_ssn, has_credit_account, segment, persona, arrival, credit_limit, etc.).",
         "Still unknown: " +
-          [typeof profile.has_ssn !== "boolean" ? "SSN/ITIN status" : "", typeof profile.has_credit_account !== "boolean" ? "whether they have any U.S. credit card or loan" : "", !profile.segment ? "student or working professional, and roughly when they arrived" : ""].filter(Boolean).join("; ") || "nothing essential",
+          [typeof profile.has_ssn !== "boolean" ? "SSN/ITIN status" : "", typeof profile.has_credit_account !== "boolean" ? "whether they have any credit card or loan today (and if repairing, what happened)" : "", !profile.segment ? "student or working, and whether they're new to the U.S. or have been here a while" : ""].filter(Boolean).join("; ") || "nothing essential",
         "Ask ONE short question for the most important unknown. If SSN and existing-credit status are both known after this message, don't ask about money yet: instead ask what score they're aiming for and what it should unlock (an apartment, a first card, a premium card, a car), roughly by when.",
       ].join("\n");
     case "goal":
