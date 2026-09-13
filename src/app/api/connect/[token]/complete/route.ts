@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { browserEnabled, captureAndRead, releaseSession } from "@/lib/coach/browser";
+import { browserEnabled } from "@/lib/coach/browser-flag";
 import { coachAvailable } from "@/lib/coach/db";
 import { sendblueProvider } from "@/lib/coach/sendblue";
 import * as store from "@/lib/coach/store";
@@ -14,6 +14,14 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/connect/[token
   const link = await store.getLinkToken(token);
   if (!link || link.status !== "opened" || !link.connect_url || !link.session_id) return NextResponse.json({ ok: false, error: "Open the link first." }, { status: 409 });
 
+  let browser: typeof import("@/lib/coach/browser");
+  try {
+    browser = await import("@/lib/coach/browser");
+  } catch (e) {
+    console.error("browser module failed to load", e);
+    return NextResponse.json({ ok: false, error: `Browser module failed to load: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
+  }
+  const { captureAndRead, releaseSession } = browser;
   try {
     const read = await captureAndRead(link.connect_url);
     if (!read.loggedIn) return NextResponse.json({ ok: false, reason: "not_logged_in", notes: read.extraction?.notes ?? "Still on the login page." });

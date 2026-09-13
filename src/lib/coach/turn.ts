@@ -1,5 +1,4 @@
 import "server-only";
-import { deleteContext } from "./browser";
 import { anthropicConfigured } from "./claude";
 import { buildPacket, renderPacket } from "./context";
 import { agentLoop } from "./llm";
@@ -89,7 +88,10 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   // Hard route: DISCONNECT revokes the Credit Karma session without a model call.
   if (/^\s*disconnect\b/i.test(text)) {
     const conn = await store.getConnection(userId);
-    if (conn?.context_id) await deleteContext(conn.context_id);
+    if (conn?.context_id) {
+      const { deleteContext } = await import("./browser");
+      await deleteContext(conn.context_id);
+    }
     if (conn) await store.updateConnection(conn.id, { status: "revoked", context_id: null });
     return finish(conn && conn.status !== "revoked" ? "Done. I deleted the saved Credit Karma session and won’t re-check your score. Text “check my score” whenever you want to connect again." : "Nothing to disconnect right now. Text “check my score” if you want me to start tracking it.", { intent: "disconnect_credit" });
   }

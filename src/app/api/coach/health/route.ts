@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { browserEnabled } from "@/lib/coach/browser";
+import { browserEnabled } from "@/lib/coach/browser-flag";
 import { anthropicConfigured, MODELS } from "@/lib/coach/claude";
 import { coachAvailable, db } from "@/lib/coach/db";
 import { sendblueBaseUrl, sendblueMode, webhookSecretSource } from "@/lib/coach/sendblue";

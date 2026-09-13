@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { browserEnabled, createContext, createSession, liveViewUrl } from "@/lib/coach/browser";
+import { browserEnabled } from "@/lib/coach/browser-flag";
 import { coachAvailable } from "@/lib/coach/db";
 import * as store from "@/lib/coach/store";
 
@@ -15,6 +15,14 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/connect/[token
   if (link.status === "completed") return NextResponse.json({ ok: false, error: "This link was already used." }, { status: 410 });
   if (link.status === "opened" && link.live_view_url) return NextResponse.json({ ok: true, liveViewUrl: link.live_view_url, expiresAt: link.expires_at });
 
+  let browser: typeof import("@/lib/coach/browser");
+  try {
+    browser = await import("@/lib/coach/browser");
+  } catch (e) {
+    console.error("browser module failed to load", e);
+    return NextResponse.json({ ok: false, error: `Browser module failed to load: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
+  }
+  const { createContext, createSession, liveViewUrl } = browser;
   try {
     const connection = await store.ensureConnection(link.user_id);
     let contextId = connection.context_id;

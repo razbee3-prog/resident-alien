@@ -1,5 +1,5 @@
 import "server-only";
-import { browserEnabled, refreshConnection } from "./browser";
+import { browserEnabled } from "./browser-flag";
 import { buildPacket, renderPacket } from "./context";
 import { scoreDelta } from "./score-page";
 import { site } from "@/lib/site";
@@ -55,6 +55,7 @@ async function refreshScore(user: CoachUser): Promise<string | null> {
     const conn = await store.getConnection(user.id);
     if (!conn || conn.status !== "active" || !conn.context_id) return null;
     const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("refresh timed out")), 90_000));
+    const { refreshConnection } = await import("./browser");
     const read = await Promise.race([refreshConnection(conn.context_id), timeout]);
     if (!read.loggedIn) {
       await store.updateConnection(conn.id, { status: "needs_relogin", last_error: read.extraction?.notes ?? "login page" });

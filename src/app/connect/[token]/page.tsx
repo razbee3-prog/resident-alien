@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ConnectClient } from "@/components/connect-client";
 import { Container } from "@/components/ui";
-import { browserEnabled } from "@/lib/coach/browser";
+import { browserEnabled } from "@/lib/coach/browser-flag";
 import { coachAvailable } from "@/lib/coach/db";
 import * as store from "@/lib/coach/store";
 

@@ -2,7 +2,7 @@ import "server-only";
 import type Anthropic from "@anthropic-ai/sdk";
 import { assess, type ReadinessInput } from "@/lib/readiness";
 import { site } from "@/lib/site";
-import { browserEnabled } from "./browser";
+import { browserEnabled } from "./browser-flag";
 import { paymentRecommendation, safePayment, safeRemittance, utilization } from "./finance";
 import type { ToolName } from "./skills";
 import * as store from "./store";

@@ -7,7 +7,7 @@ import { extractScore, looksLikeLoginPage, type ScoreExtraction } from "./score-
  * Hosted browser (Browserbase) the user logs into themselves via a live view. We hold a per-user context id (an
  * encrypted cookie profile stored at Browserbase), never credentials. Demo feature; off unless CREDIT_BROWSER_ENABLED=1.
  */
-export const browserEnabled = Boolean(process.env.BROWSERBASE_API_KEY && process.env.CREDIT_BROWSER_ENABLED === "1");
+export { browserEnabled } from "./browser-flag";
 export const PROVIDER_HOME = "https://www.creditkarma.com/";
 export type Device = "laptop" | "phone";
 
