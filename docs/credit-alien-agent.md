@@ -13,10 +13,19 @@ This document describes what was built, where it departs from the original archi
 | Last 5 to 10 messages as live context | Last 12 raw messages plus a rolling summary refreshed after every turn | "yes" and "the second one" are meaningless without the thread |
 | Memory-write policy, no writer | `memory.ts`: after each turn, Haiku proposes memories with what they supersede; inferred facts are dropped unless high-confidence; duplicates are skipped | Someone has to write the memories |
 | Idempotency mentioned | Dedupe on `message_handle`, a per-user lock, a short debounce so rapid texts get one reply, and a daily sweep for any message that never got a turn | iMessage users double-text |
-| No first-contact flow | Onboarding state machine: new → consent → goal → context → active. Each stage pins the one question to ask. The website button prefills segment and country | Consent has to be explicit; the plan needs five facts before it exists |
+| No first-contact flow | Onboarding state machine: new → situation → goal → connect (Credit Karma) or context (money facts) → active. Each stage pins the one question to ask. Texting first is the consent to reply; every intro ends with "Reply STOP anytime" | The plan needs a few facts before it exists; the demo wants the score pulled before the plan |
 | pgvector RAG, Temporal, BullMQ | Curated knowledge in the cached system prompt; one daily Vercel Cron plus a `coach_jobs` table | Nothing here needs a queue yet. Move knowledge to retrieval when it outgrows ~50k tokens |
 
 Kept as written: structured state over chat history, deterministic finance tools, plan versioning (never mutate), the Monitor never texts on its own except for payment risk, Sendblue behind a provider interface, the priority order, the hard rules.
+
+## First five minutes (the demo arc)
+
+1. Website button opens Messages with "Hey Credit Alien 👽 Help me build my credit."
+2. Coach: warm intro, one question (SSN or ITIN yet? any U.S. credit already?), "Reply STOP anytime."
+3. Situation stage: one question per turn until SSN and existing-credit status are known, plus student vs working.
+4. Goal stage: target score and what it unlocks. `set_goal`, then, if they have an SSN and the browser feature is on, `request_credit_link` in the same turn with the link on its own line.
+5. Connect stage: the user logs into Credit Karma from the link (phone or laptop). When the read completes, `POST /api/connect/<token>/complete` runs a coach-initiated turn (`event.ts`): summary of what it saw, `create_plan_version` + `set_weekly_task`, and the long game in plain words (path, what is monitored and when, the two or three practices that matter). Stage → active.
+6. `RESET` by text wipes the sender's own coach data for rehearsals; `DISCONNECT` deletes the Credit Karma session.
 
 ## Flow of one message
 

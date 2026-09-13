@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
-import type { CoachEvent, CoachUser, Connection, Conversation, CreditSnapshot, Goal, Job, LinkToken, Memory, Message, Plan, Progress, Run, Task } from "./types";
+import { legacyStageColumn } from "./onboarding";
+import type { CoachEvent, CoachUser, Connection, Conversation, CreditSnapshot, Goal, Job, LinkToken, Memory, Message, OnboardingStage, Plan, Profile, Progress, Run, Task } from "./types";
 
 const now = () => new Date().toISOString();
 const uuid = () => crypto.randomUUID();
@@ -291,4 +292,32 @@ export async function insertSnapshot(userId: string, input: { source: string; sc
 
 export async function listSnapshots(userId: string, limit = 5): Promise<CreditSnapshot[]> {
   return db.select<CreditSnapshot>("coach_credit_snapshots", { eq: { user_id: userId }, order: { col: "created_at", asc: false }, limit });
+}
+
+/** Demo helper: wipe everything the coach knows about one user and put them back at first contact. */
+export async function resetUser(userId: string): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  for (const t of ["coach_messages", "coach_goals", "coach_plans", "coach_tasks", "coach_memories", "coach_progress", "coach_runs", "coach_jobs", "coach_events", "coach_link_tokens", "coach_credit_snapshots", "coach_connections"]) {
+    try {
+      counts[t] = await db.delete(t, { user_id: userId });
+    } catch (e) {
+      counts[t] = -1;
+      console.warn(`reset ${t} failed`, e);
+    }
+  }
+  await db.update<Conversation>("coach_conversations", { user_id: userId }, { summary: "", summary_through: null, turn_count: 0, off_track_streak: 0, nudge: false, lock_until: null });
+  await updateUser(userId, { onboarding_stage: "new", segment: null, country: null, persona: null, profile: {}, next_checkin_at: null, checkin_weekday: null, opted_out: false, consent_messaging_at: null });
+  return counts;
+}
+
+/** Advance the onboarding stage. If the column's check constraint rejects a new value, store the legacy value and keep the real stage in profile.stage_hint. */
+export async function setStage(user: CoachUser, stage: OnboardingStage, extra: Partial<CoachUser> = {}): Promise<CoachUser> {
+  const hintless = { ...user.profile } as Profile & { stage_hint?: OnboardingStage };
+  delete hintless.stage_hint;
+  try {
+    return await updateUser(user.id, { ...extra, onboarding_stage: stage, profile: hintless });
+  } catch (e) {
+    console.warn(`stage '${stage}' rejected by the database; storing legacy value with stage_hint`, e);
+    return await updateUser(user.id, { ...extra, onboarding_stage: legacyStageColumn(stage), profile: { ...hintless, stage_hint: stage } as Profile });
+  }
 }

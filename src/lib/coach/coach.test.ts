@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { paymentRecommendation, safePayment, safeRemittance, utilization } from "./finance";
-import { contextComplete, isAffirmative, missingContext, parseButtonPrefill } from "./onboarding";
+import { contextComplete, isAffirmative, missingContext, parseButtonPrefill, situationKnown } from "./onboarding";
 import { isImmigrationStatusQuestion, isOptIn, isOptOut, outboundProblems, redactPii } from "./policy";
 import { normalizePhone, splitBubbles, stripMarkdown } from "./text";
 
@@ -73,12 +73,17 @@ describe("policy", () => {
 describe("onboarding", () => {
   it("parses the button prefill", () => {
     assert.deepEqual(parseButtonPrefill("Hi Credit Alien 👽 I'm a student from IND. Help me build U.S. credit."), { segment: "student", country: "IND" });
-    assert.deepEqual(parseButtonPrefill("Hi Credit Alien 👽 I'm new here. Help me build U.S. credit."), {});
+    assert.deepEqual(parseButtonPrefill("Hey Credit Alien 👽 Help me build my credit."), {});
     assert.deepEqual(parseButtonPrefill("hey"), {});
   });
   it("affirmatives", () => {
     for (const t of ["yes", "YES!", "yeah sure", "ok", "👍", "let's go"]) assert.equal(isAffirmative(t), true, t);
     for (const t of ["no", "what is this", "maybe later"]) assert.equal(isAffirmative(t), false, t);
+  });
+  it("situation known once SSN and existing-credit status are booleans", () => {
+    assert.equal(situationKnown({}), false);
+    assert.equal(situationKnown({ has_ssn: true }), false);
+    assert.equal(situationKnown({ has_ssn: true, has_credit_account: false }), true);
   });
   it("context completeness", () => {
     assert.equal(contextComplete({}), false);

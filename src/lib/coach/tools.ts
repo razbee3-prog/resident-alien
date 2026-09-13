@@ -211,6 +211,12 @@ export const toolDefinitions: Anthropic.Tool[] = [
     strict: true,
   },
   {
+    name: "skip_credit_connection",
+    description: "The user can't or won't connect Credit Karma right now. Move on to the money questions and build the plan from what they tell you.",
+    input_schema: { type: "object", properties: { reason: str }, additionalProperties: false, required: ["reason"] },
+    strict: true,
+  },
+  {
     name: "get_credit_snapshots",
     description: "The user's recorded credit scores (newest first) with model, bureau, date, and source. The only place a score may come from.",
     input_schema: { type: "object", properties: {}, additionalProperties: false, required: [] },
@@ -226,7 +232,7 @@ export const toolDefinitions: Anthropic.Tool[] = [
 
 /* ------------------------------- executor ------------------------------ */
 
-export type Effects = { profile?: Profile; goalSet?: boolean; planCreated?: Plan; taskSet?: Task; taskCompleted?: boolean; escalated?: string };
+export type Effects = { profile?: Profile; goalSet?: boolean; planCreated?: Plan; taskSet?: Task; taskCompleted?: boolean; escalated?: string; linkIssued?: boolean; linkUrl?: string; skipConnection?: boolean };
 export type ToolCallLog = { name: string; input: unknown; ok: boolean; result: string; ms: number };
 
 export type ToolContext = { user: CoachUser; allowed: Set<ToolName>; effects: Effects; log: ToolCallLog[] };
@@ -361,12 +367,20 @@ export async function executeTool(name: string, rawInput: unknown, ctx: ToolCont
         if (!browserEnabled) return done("The score check is not enabled on this deployment. Tell the user they can text a screenshot of their score page instead, and coach from what they tell you.", false);
         const conn = await store.ensureConnection(uid);
         const link = await store.issueLinkToken(uid, conn.id);
-        return done({ url: `${site.url}/connect/${link.token}`, expires_in_minutes: 15, instructions: "Open on a laptop; log in to Credit Karma in the window; tap 'I'm logged in'." });
+        const url = `${site.url}/connect/${link.token}`;
+        ctx.effects.linkIssued = true;
+        ctx.effects.linkUrl = url;
+        return done({ url, expires_in_minutes: 15, instructions: "Paste this exact url in your reply on its own line (never a placeholder). Works on their phone or a laptop: log in to Credit Karma in the window, then tap 'I'm logged in, read my score'." });
+      }
+      case "skip_credit_connection": {
+        ctx.effects.skipConnection = true;
+        await store.insertProgress(uid, { task_id: null, kind: "neutral", note: `Skipped Credit Karma connection: ${String(input.reason ?? "")}` });
+        return done({ ok: true });
       }
       case "get_credit_snapshots": {
         const snaps = await store.listSnapshots(uid, 5);
         const conn = await store.getConnection(uid);
-        return done({ connection: conn ? { status: conn.status, last_ok_at: conn.last_ok_at } : null, snapshots: snaps.map((x) => ({ score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, source: x.source, recorded_at: x.created_at })) });
+        return done({ connection: conn ? { status: conn.status, last_ok_at: conn.last_ok_at } : null, snapshots: snaps.map((x) => ({ score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, source: x.source, recorded_at: x.created_at, observations: (x.extract as { observations?: string } | null)?.observations ?? null })) });
       }
       case "assess_readiness": {
         const r = assess(readinessInput(profile));

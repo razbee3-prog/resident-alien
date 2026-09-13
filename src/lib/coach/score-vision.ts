@@ -15,7 +15,12 @@ export const ScoreExtraction = z.object({
   bureau: z.string().nullable().describe("TransUnion, Equifax, Experian, or null if not shown"),
   as_of: z.string().nullable().describe("The 'updated' or 'as of' date shown, ISO YYYY-MM-DD if possible, else the text, else null"),
   confidence: z.enum(["high", "medium", "low"]),
-  notes: z.string().describe("One sentence: what the page shows, and anything blocking (MFA prompt, captcha, error)."),
+  utilization_percent: z.number().nullable().describe("Credit card utilization percent if shown, else null"),
+  on_time_percent: z.number().nullable().describe("On-time payment percent if shown, else null"),
+  total_accounts: z.number().nullable().describe("Number of accounts if shown, else null"),
+  derogatory_marks: z.number().nullable().describe("Derogatory marks / collections count if shown, else null"),
+  observations: z.string().describe("Two or three plain sentences on what the page shows beyond the score: accounts, factors, alerts, offers. Only what is visible."),
+  notes: z.string().describe("One sentence: what the page is, and anything blocking (MFA prompt, captcha, error)."),
 });
 export type ScoreExtraction = z.infer<typeof ScoreExtraction>;
 

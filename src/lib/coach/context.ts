@@ -1,4 +1,5 @@
 import "server-only";
+import { effectiveStage } from "./onboarding";
 import * as store from "./store";
 import { daysBetween } from "./text";
 import type { CoachUser, Connection, Conversation, CreditSnapshot, Goal, Memory, Message, Plan, Progress, Task } from "./types";
@@ -38,7 +39,7 @@ export async function buildPacket(user: CoachUser, conv: Conversation, recent: M
   const now = new Date().toISOString();
   return {
     now,
-    stage: user.onboarding_stage,
+    stage: effectiveStage(user),
     goal: goal ? { outcome_type: goal.outcome_type, description: goal.description, score_target: goal.score_target, target_date: goal.target_date } : null,
     days_left: goal?.target_date ? daysBetween(now, `${goal.target_date}T00:00:00Z`) : null,
     plan: plan ? { version: plan.version, milestone: activeMilestone(plan), rationale: plan.rationale } : null,

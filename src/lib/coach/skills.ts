@@ -19,7 +19,8 @@ export type ToolName =
   | "calc_payment_recommendation"
   | "assess_readiness"
   | "request_credit_link"
-  | "get_credit_snapshots";
+  | "get_credit_snapshots"
+  | "skip_credit_connection";
 
 export type SkillName = "onboarding" | "credit_coach" | "plan_and_goals" | "cash_flow" | "smalltalk";
 
@@ -28,7 +29,7 @@ export const BASE_TOOLS: ToolName[] = ["get_state", "update_profile", "write_mem
 export const skills: Record<SkillName, { description: string; tools: ToolName[]; section: string }> = {
   onboarding: {
     description: "First contact: consent, goal, minimal context, plan v1.",
-    tools: ["set_goal", "create_plan_version", "set_weekly_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_safe_remittance", "request_credit_link"],
+    tools: ["set_goal", "create_plan_version", "set_weekly_task", "assess_readiness", "calc_utilization", "calc_safe_payment", "calc_safe_remittance", "request_credit_link", "skip_credit_connection", "get_credit_snapshots"],
     section: `## Skill: onboarding
 - Follow the stage instruction exactly. One question per turn. Warm, brief, no lists.
 - Never guess a fact; ask. Record facts with update_profile the moment you learn them.

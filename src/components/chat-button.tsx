@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { findCountry } from "@/lib/countries";
-import { usePrefs } from "@/lib/prefs";
 
 /**
  * "Chat with Credit Alien": an sms: deep link that opens Messages on iPhone, iPad, Mac, and Android with the
@@ -10,7 +8,6 @@ import { usePrefs } from "@/lib/prefs";
  * code and the number.
  */
 export function ChatButton({ number, qrSvg, size = "md", className = "" }: { number: string; qrSvg: string; size?: "md" | "lg"; className?: string }) {
-  const prefs = usePrefs();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -23,9 +20,7 @@ export function ChatButton({ number, qrSvg, size = "md", className = "" }: { num
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const country = findCountry(prefs.country);
-  const who = prefs.segment === "student" ? "a student" : prefs.segment === "professional" ? "a professional" : "new here";
-  const body = `Hi Credit Alien 👽 I'm ${who}${country ? ` from ${country.a3}` : ""}. Help me build U.S. credit.`;
+  const body = "Hey Credit Alien 👽 Help me build my credit.";
   const href = `sms:${number}?&body=${encodeURIComponent(body)}`;
   const pretty = number.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "+1 ($1) $2-$3");
 

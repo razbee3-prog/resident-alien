@@ -249,3 +249,8 @@ create index if not exists coach_credit_snapshots_user_idx on coach_credit_snaps
 alter table coach_connections enable row level security;
 alter table coach_link_tokens enable row level security;
 alter table coach_credit_snapshots enable row level security;
+
+-- Onboarding stages gained 'situation' and 'connect' (consent kept for old rows). Safe to re-run.
+alter table coach_users drop constraint if exists coach_users_onboarding_stage_check;
+alter table coach_users add constraint coach_users_onboarding_stage_check
+  check (onboarding_stage in ('new','situation','goal','connect','context','active','consent'));

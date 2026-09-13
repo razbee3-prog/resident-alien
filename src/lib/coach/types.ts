@@ -1,6 +1,6 @@
 import type { Segment } from "@/lib/segments";
 
-export type OnboardingStage = "new" | "consent" | "goal" | "context" | "active";
+export type OnboardingStage = "new" | "situation" | "goal" | "connect" | "context" | "active" | "consent";
 
 /** Durable, structured facts. Never store SSNs, card numbers, passport or account numbers here. */
 export type Profile = {
@@ -30,6 +30,8 @@ export type Profile = {
   autopay?: boolean;
   foreign_credit?: boolean;
   preferred_checkin?: string;
+  /** Set only when the database column couldn't store a new stage value; see store.setStage. */
+  stage_hint?: OnboardingStage;
 };
 
 export type CoachUser = {

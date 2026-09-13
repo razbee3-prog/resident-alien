@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { browserEnabled } from "@/lib/coach/browser-flag";
 import { coachAvailable } from "@/lib/coach/db";
+import { runEventTurn } from "@/lib/coach/event";
+import { connectedInstruction } from "@/lib/coach/onboarding";
 import { sendblueProvider } from "@/lib/coach/sendblue";
 import * as store from "@/lib/coach/store";
 
@@ -32,17 +34,22 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/connect/[token
     await store.updateLinkToken(token, { status: "completed" });
     await releaseSession(link.session_id);
 
-    const user = await store.getUser(link.user_id);
-    const goal = await store.getActiveGoal(link.user_id);
-    const scoreLine = x.score !== null ? `${x.score}${x.score_model ? ` (${x.score_model}${x.bureau ? `, ${x.bureau}` : ""})` : ""}` : null;
-    const text = scoreLine
-      ? `Connected 👽 Your Credit Karma score right now: ${scoreLine}${x.as_of ? `, updated ${x.as_of}` : ""}. That’s the starting line${goal ? ` for ${goal.description.replace(/\.$/, "").toLowerCase()}` : ""}. I’ll re-check it weekly and only text you when it moves. Text DISCONNECT anytime to stop.`
-      : `Connected 👽 I got into your Credit Karma but couldn’t read a score on the page (${x.notes}). Open the score card once in Credit Karma, then text me "check my score" and I’ll try again.`;
-    if (user && !user.opted_out) {
-      const receipts = await sendblueProvider.send(user.phone, text);
-      await store.insertOutbound({ user_id: user.id, handle: receipts[0]?.handle ?? null, content: text, status: receipts[0]?.status ?? "SENT", run_id: null });
-    }
     await store.insertProgress(link.user_id, { task_id: null, kind: "advance", note: `Credit Karma connected; score ${x.score ?? "unreadable"} recorded (${snapshot.id.slice(0, 8)}).` });
+
+    // The coach speaks: summary of what it saw, plan v1, and the long game. Falls back to a plain text if the turn fails.
+    const scoreLine = x.score !== null ? `${x.score}${x.score_model ? ` ${x.score_model}` : ""}${x.bureau ? `, ${x.bureau}` : ""}${x.as_of ? `, as of ${x.as_of}` : ""}` : "no score legible";
+    const note = `Credit Karma read just now: score ${scoreLine} (confidence ${x.confidence}). Utilization ${x.utilization_percent ?? "n/a"}%, on-time ${x.on_time_percent ?? "n/a"}%, accounts ${x.total_accounts ?? "n/a"}, derogatory ${x.derogatory_marks ?? "n/a"}. Observations: ${x.observations} A snapshot was recorded; the connection is active and will be re-read weekly.`;
+    try {
+      await runEventTurn(link.user_id, { trigger: "inbound", intent: "credit_karma_connected", skills: ["onboarding", "plan_and_goals", "credit_coach"], notes: [note], instruction: connectedInstruction() });
+    } catch (e) {
+      console.error("connected turn failed; sending fallback", e);
+      const user = await store.getUser(link.user_id);
+      const text = x.score !== null ? `Connected 👽 Your Credit Karma score right now: ${scoreLine}. I’ll build your plan from this and text it in a moment.` : `Connected 👽 I got in but couldn’t read a score on the page (${x.notes}). Open the score card once in Credit Karma, then text me "check my score".`;
+      if (user && !user.opted_out) {
+        const receipts = await sendblueProvider.send(user.phone, text);
+        await store.insertOutbound({ user_id: user.id, handle: receipts[0]?.handle ?? null, content: text, status: receipts[0]?.status ?? "SENT", run_id: null });
+      }
+    }
     return NextResponse.json({ ok: true, score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of });
   } catch (e) {
     console.error("connect complete failed", e);

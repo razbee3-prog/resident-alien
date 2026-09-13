@@ -28,6 +28,7 @@ export interface Db {
   acquireLock(userId: string, untilIso: string): Promise<boolean>;
   releaseLock(userId: string): Promise<void>;
   count(table: string): Promise<number>;
+  delete(table: string, match: Record<string, unknown>): Promise<number>;
 }
 
 export const coachAvailable = storageMode !== "demo";
@@ -82,6 +83,11 @@ const liveDb: Db = {
     const { count, error } = await supabase().from(table).select("*", { count: "exact", head: true });
     if (error) throw new Error(`${table} count: ${error.message}`);
     return count ?? 0;
+  },
+  async delete(table, match) {
+    const { data, error } = await supabase().from(table).delete().match(match).select("*");
+    if (error) throw new Error(`${table} delete: ${error.message}`);
+    return data?.length ?? 0;
   },
 };
 
@@ -166,6 +172,12 @@ const localDb: Db = {
   },
   async count(table) {
     return (await readTable(table)).length;
+  },
+  async delete(table, match) {
+    const rows = await readTable<Record<string, unknown>>(table);
+    const keep = rows.filter((r) => !Object.entries(match).every(([k, v]) => r[k] === v));
+    await writeTable(table, keep);
+    return rows.length - keep.length;
   },
 };
 

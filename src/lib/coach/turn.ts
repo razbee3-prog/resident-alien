@@ -3,7 +3,8 @@ import { anthropicConfigured } from "./claude";
 import { buildPacket, renderPacket } from "./context";
 import { agentLoop } from "./llm";
 import { extractAndUpdate } from "./memory";
-import { isAffirmative, parseButtonPrefill, stageInstruction } from "./onboarding";
+import { browserEnabled } from "./browser-flag";
+import { effectiveStage, parseButtonPrefill, situationKnown, stageInstruction } from "./onboarding";
 import { IMMIGRATION_REFERRAL, OUTBOUND_FALLBACK, PII_WARNING, isImmigrationStatusQuestion, outboundProblems } from "./policy";
 import { route, type Route } from "./router";
 import { extractScore, fetchImage } from "./score-vision";
@@ -50,7 +51,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   let user = (await store.getUser(userId))!;
   const text = pending.map((m) => m.content).join("\n").trim();
   const piiFlagged = pending.some((m) => Array.isArray((m.payload as { pii?: unknown[] } | null)?.pii) && ((m.payload as { pii: unknown[] }).pii.length > 0));
-  const base = { runId, stage: user.onboarding_stage, skills: [] as string[], intent: null as string | null, error: null as string | null };
+  const base = { runId, stage: effectiveStage(user), skills: [] as string[], intent: null as string | null, error: null as string | null };
 
   const finish = async (reply: string | null, extra: Partial<TurnResult> & { packet?: unknown; log?: unknown; usage?: unknown; model?: string | null; policy?: unknown }) => {
     await store.markProcessed(ids, runId);
@@ -80,11 +81,22 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
       error: [extra.error, sendError].filter(Boolean).join("; ") || null,
       duration_ms: Date.now() - t0,
     });
-    return { ...base, ...extra, replied: Boolean(reply), reply, stage: (extra.stage ?? user.onboarding_stage) as OnboardingStage } as TurnResult;
+    return { ...base, ...extra, replied: Boolean(reply), reply, stage: (extra.stage ?? effectiveStage(user)) as OnboardingStage } as TurnResult;
   };
 
   if (user.opted_out || !text) return finish(null, {});
   if (!anthropicConfigured) return finish(null, { error: "ANTHROPIC_API_KEY not set" });
+
+  // Hard route: RESET wipes this user's own coach data (demo rehearsal) without a model call.
+  if (/^\s*reset\b/i.test(text)) {
+    const conn = await store.getConnection(userId);
+    if (conn?.context_id) {
+      const { deleteContext } = await import("./browser");
+      await deleteContext(conn.context_id);
+    }
+    await store.resetUser(userId);
+    return finish("Fresh start 👽 I’ve cleared everything I knew. Text me anything to begin again.", { intent: "reset", stage: "new" });
+  }
 
   // Hard route: DISCONNECT revokes the Credit Karma session without a model call.
   if (/^\s*disconnect\b/i.test(text)) {
@@ -103,18 +115,10 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     return finish(IMMIGRATION_REFERRAL, { intent: "immigration_status", policy: { hard_route: "immigration" } });
   }
 
-  // Onboarding transitions decided from the user's text.
-  let stage = user.onboarding_stage;
-  let instructionStage: OnboardingStage = stage;
-  let consentPending = false;
+  // Onboarding stage (legacy 'consent' rows behave as 'situation'). Texting first is the consent to reply.
+  const stage: OnboardingStage = effectiveStage(user);
   const prefill = stage === "new" ? parseButtonPrefill(text) : undefined;
-  if (stage === "consent") {
-    if (isAffirmative(text)) {
-      user = await store.updateUser(userId, { consent_messaging_at: new Date().toISOString(), onboarding_stage: "goal" });
-      stage = "goal";
-      instructionStage = "consent"; // "thank + ask the goal question"
-    } else consentPending = true;
-  }
+  if (!user.consent_messaging_at) user = await store.updateUser(userId, { consent_messaging_at: new Date().toISOString() });
 
   // Skills: onboarding until active, then routed.
   let routed: Route | null = null;
@@ -134,7 +138,7 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   const conv = await store.getConversation(userId);
   const recent = (await store.recentMessages(userId, 14)).filter((m) => !ids.includes(m.id)).slice(-12);
   const packet = await buildPacket(user, conv, recent);
-  const instruction = stageInstruction(instructionStage, user.profile, { prefill, consentPending });
+  const instruction = stageInstruction(stage, user.profile, { prefill, browserEnabled });
   const notes: string[] = [];
   const screenshotNote = await readTextedScreenshot(userId, pending);
   if (screenshotNote) notes.push(screenshotNote);
@@ -169,19 +173,23 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     }
   }
   if (!reply) reply = "Got it. What would you like to tackle next?";
+  if (loop.effects.linkUrl && !reply.includes(loop.effects.linkUrl)) reply = `${reply.replace(/\[[^\]]*link[^\]]*\]/gi, "").trim()}\n\n${loop.effects.linkUrl}`;
   if (piiFlagged) reply = `${PII_WARNING}\n\n${reply}`;
 
-  // Stage advancement from tool effects.
+  // Stage advancement from tool effects and profile facts.
   const fx = loop.effects;
+  const profileNow = fx.profile ?? user.profile;
   let nextStage: OnboardingStage = stage;
-  if (stage === "new") nextStage = "consent";
-  else if (stage === "goal" && fx.goalSet) nextStage = "context";
-  else if (stage === "context" && fx.planCreated && fx.taskSet) nextStage = "active";
-  if (nextStage !== user.onboarding_stage || fx.taskSet) {
-    const patch: Partial<CoachUser> = { onboarding_stage: nextStage };
+  if (stage === "new") nextStage = situationKnown(profileNow) ? "goal" : "situation";
+  else if (stage === "situation" && situationKnown(profileNow)) nextStage = fx.goalSet ? (fx.linkIssued ? "connect" : "context") : "goal";
+  else if (stage === "goal" && fx.goalSet) nextStage = fx.linkIssued ? "connect" : "context";
+  else if (stage === "connect" && fx.skipConnection) nextStage = "context";
+  else if ((stage === "connect" || stage === "context") && fx.planCreated && fx.taskSet) nextStage = "active";
+  if (nextStage !== stage || fx.taskSet) {
+    const patch: Partial<CoachUser> = {};
     if (nextStage === "active" && !user.next_checkin_at) patch.next_checkin_at = new Date(Date.now() + 7 * 86400000).toISOString();
     if (fx.taskSet) patch.next_checkin_at = new Date(Math.min(new Date(fx.taskSet.due_at ?? Date.now() + 7 * 86400000).getTime(), Date.now() + 7 * 86400000)).toISOString();
-    user = await store.updateUser(userId, patch);
+    user = await store.setStage({ ...user, profile: profileNow }, nextStage, patch);
   }
 
   const result = await finish(reply, { stage: nextStage, skills, intent: routed?.intent ?? (stage === "active" ? null : `onboarding_${stage}`), packet, log: loop.log, usage: loop.usage, model: loop.model, policy, error: loop.refused ? "refusal" : null });
