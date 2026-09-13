@@ -27,7 +27,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/connect/[token]
     console.error("browser module failed to load", e);
     return NextResponse.json({ ok: false, error: `Browser module failed to load: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
   }
-  const { createContext, createSession, liveViewUrl } = browser;
+  const { createContext, createSession, liveViewUrl, openLoginPage } = browser;
   try {
     const connection = await store.ensureConnection(link.user_id);
     let contextId = connection.context_id;
@@ -36,11 +36,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/connect/[token]
       await store.updateConnection(connection.id, { context_id: contextId });
     }
     const session = await createSession(contextId, { device, timeoutSec: 900, keepAlive: true });
+    const landed = await openLoginPage(session.connectUrl);
     const url = await liveViewUrl(session.id);
+    console.info(`connect start: session ${session.id} (${device}) landed on ${landed ?? "unknown"}`);
     await store.updateLinkToken(token, { session_id: session.id, connect_url: session.connectUrl, live_view_url: url, device, status: "opened" });
     // connectUrl is the session's own control channel, the same one the live view uses; the phone keyboard helper
     // talks to it directly so typed text goes phone → Browserbase, never through this server.
-    return NextResponse.json({ ok: true, liveViewUrl: url, connectUrl: session.connectUrl, device, expiresAt: link.expires_at });
+    return NextResponse.json({ ok: true, liveViewUrl: url, connectUrl: session.connectUrl, device, landed, expiresAt: link.expires_at });
   } catch (e) {
     console.error("connect start failed", e);
     return NextResponse.json({ ok: false, error: `Couldn’t open the browser: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });

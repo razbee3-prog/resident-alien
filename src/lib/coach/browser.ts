@@ -9,6 +9,7 @@ import { extractScore, looksLikeLoginPage, type ScoreExtraction } from "./score-
  */
 export { browserEnabled } from "./browser-flag";
 export const PROVIDER_HOME = "https://www.creditkarma.com/";
+export const PROVIDER_LOGIN = "https://www.creditkarma.com/auth/logon";
 export type Device = "laptop" | "phone";
 
 let client: Browserbase | null = null;
@@ -68,6 +69,19 @@ export async function withPage<T>(connectUrl: string, fn: (page: Page) => Promis
     return await fn(page);
   } finally {
     await browser.close().catch(() => {});
+  }
+}
+
+/** Point a fresh login session at the provider's sign-in page so the live view isn't blank. Best effort. */
+export async function openLoginPage(connectUrl: string): Promise<string | null> {
+  try {
+    return await withPage(connectUrl, async (page) => {
+      await page.goto(PROVIDER_LOGIN, { waitUntil: "domcontentloaded", timeout: 30_000 }).catch(() => {});
+      return page.url();
+    });
+  } catch (e) {
+    console.warn("openLoginPage failed", e);
+    return null;
   }
 }
 

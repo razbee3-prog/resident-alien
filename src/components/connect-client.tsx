@@ -26,7 +26,10 @@ export function ConnectClient({ token }: { token: string }) {
     if (started.current) return;
     started.current = true;
     (async () => {
-      const dev: "laptop" | "phone" = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? "phone" : "laptop";
+      // Safari can present a desktop user agent on iPhone/iPad ("Request Desktop Website"), so also look for a touch screen.
+      const ua = navigator.userAgent;
+      const touch = navigator.maxTouchPoints > 1 || (typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches);
+      const dev: "laptop" | "phone" = /iPhone|iPad|iPod|Android/i.test(ua) || (touch && /Macintosh|Mobile/i.test(ua)) || (touch && window.innerWidth < 900) ? "phone" : "laptop";
       setDevice(dev);
       try {
         const res = await fetch(`/api/connect/${token}/start`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ device: dev }) });
