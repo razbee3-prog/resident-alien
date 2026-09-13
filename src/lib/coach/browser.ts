@@ -39,8 +39,8 @@ export async function createSession(contextId: string, opts: { device: Device; t
     api_timeout: Math.min(21_600, Math.max(60, opts.timeoutSec)),
     browserSettings: {
       context: { id: contextId, persist: true },
+      // A phone-sized viewport is enough for the site's responsive layout; Browserbase's mobile OS emulation is Enterprise-only.
       viewport: opts.device === "phone" ? { width: 390, height: 844 } : { width: 1280, height: 800 },
-      ...(opts.device === "phone" ? { os: "mobile" as const } : {}),
     },
   });
   return { id: s.id, connectUrl: s.connectUrl };
