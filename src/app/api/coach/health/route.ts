@@ -88,11 +88,22 @@ export async function POST(req: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || auth !== `Bearer ${secret}`) return NextResponse.json({ ok: false }, { status: 401 });
   if (!coachAvailable) return NextResponse.json({ ok: false, error: "coach not configured" }, { status: 503 });
-  let body: { action?: string };
+  let body: { action?: string; phone?: string };
   try {
-    body = (await req.json()) as { action?: string };
+    body = (await req.json()) as { action?: string; phone?: string };
   } catch {
     body = {};
+  }
+  if (body.action === "issue_link") {
+    // Operator shortcut for demos: a Credit Karma link for a phone number without going through the model.
+    const { normalizePhone } = await import("@/lib/coach/text");
+    const { site } = await import("@/lib/site");
+    const phone = normalizePhone(String((body as { phone?: string }).phone ?? ""));
+    if (!phone) return NextResponse.json({ ok: false, error: "phone must be E.164" }, { status: 400 });
+    const user = await store.ensureUser(phone);
+    const conn = await store.ensureConnection(user.id);
+    const link = await store.issueLinkToken(user.id, conn.id);
+    return NextResponse.json({ ok: true, url: `${site.url}/connect/${link.token}`, expires_at: link.expires_at });
   }
   if (body.action !== "sweep") return NextResponse.json({ ok: false, error: "unknown action" }, { status: 400 });
 
