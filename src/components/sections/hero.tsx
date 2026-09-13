@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeroCard } from "@/components/card/hero-card";
+import { ChatCta } from "@/components/chat-cta";
 import { Arrow, ButtonLink, Container } from "@/components/ui";
 
 export function Hero() {
@@ -15,10 +16,11 @@ export function Hero() {
             A Visa credit card for people who just got here. No U.S. credit history needed. Approved on the evidence you
             already have.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5">
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <ButtonLink href="#waitlist" size="lg">
               Join the waitlist
             </ButtonLink>
+            <ChatCta size="lg" />
             <Link href="#cards" className="group inline-flex items-center gap-2 text-[0.95rem] font-medium text-ink">
               Compare the cards <Arrow className="transition-transform group-hover:translate-x-0.5" />
             </Link>

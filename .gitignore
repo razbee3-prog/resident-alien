@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local data written in dev without a database
 /.data/
+
+# committed template for env files
+!.env.example
