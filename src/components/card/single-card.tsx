@@ -1,15 +1,18 @@
 "use client";
 
-import { cardCountry } from "@/components/card/hero-cards";
 import { ResidentCard } from "@/components/card/resident-card";
 import { findCountry } from "@/lib/countries";
 import type { Segment } from "@/lib/segments";
 
-export function SingleCard({ segment }: { segment: Segment }) {
-  const country = findCountry(cardCountry[segment])!;
+export const cardCountry: Record<Segment, string> = { student: "GB", professional: "MX" };
+
+export function SingleCard({ segment, country }: { segment: Segment; country?: string }) {
+  const c = findCountry(country ?? cardCountry[segment])!;
   return (
-    <div className="mx-auto w-[250px] rotate-[4deg] sm:w-[320px]">
-      <ResidentCard segment={segment} country={country} />
+    <div className="mx-auto w-full max-w-[560px] lg:mx-0">
+      <div className="[transform:rotate(-3deg)]">
+        <ResidentCard segment={segment} country={c} orientation="landscape" />
+      </div>
     </div>
   );
 }

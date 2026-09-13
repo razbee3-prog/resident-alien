@@ -1,8 +1,9 @@
 import { SingleCard } from "@/components/card/single-card";
+import { ProductHero, Points } from "@/components/product-hero";
 import { Cta } from "@/components/sections/cta";
 import { Faq } from "@/components/sections/faq";
 import { Ladder, type Rung } from "@/components/sections/ladder";
-import { ButtonLink, Container, Section } from "@/components/ui";
+import { Container } from "@/components/ui";
 import { segments, type Segment } from "@/lib/segments";
 
 function toRungs(timeline: { month: string; step: string }[]): Rung[] {
@@ -17,53 +18,19 @@ export function SegmentPage({ segment }: { segment: Segment }) {
   const other = segments[segment === "student" ? "professional" : "student"];
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-[40%] h-[640px] w-[800px] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
-          style={{ background: "radial-gradient(closest-side, rgba(135,133,255,.14), transparent 70%)" }}
-        />
-        <Container className="relative pb-6 pt-16 text-center md:pt-24">
-          <p className="text-sm text-muted">For {s.plural.toLowerCase()}</p>
-          <h1 className="mx-auto mt-4 max-w-[14ch] text-[2.8rem] font-bold leading-[0.98] tracking-[-0.04em] sm:text-[4rem] md:text-[5rem]">{s.headline}</h1>
-          <p className="mx-auto mt-6 max-w-[30rem] text-lg leading-snug text-muted md:text-[1.25rem]">{s.sub}</p>
-          <div className="mt-9 flex justify-center">
-            <ButtonLink href="/waitlist" size="lg">
-              Join the waitlist
-            </ButtonLink>
-          </div>
-          <div className="mt-14">
-            <SingleCard segment={segment} />
-          </div>
-        </Container>
-      </section>
-
-      <Section className="pt-10 md:pt-16">
-        <Container>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="panel p-8">
-              <p className="text-sm text-muted">What counts</p>
-              <ul className="mt-4 flex flex-col gap-2 text-[1.05rem] font-medium text-ink">
-                {s.evidence.slice(0, 3).map((e) => (
-                  <li key={e}>{e}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="panel p-8">
-              <p className="text-sm text-muted">To start, illustrative</p>
-              <p className="num mt-4 font-display text-[2.4rem] font-bold leading-none tracking-[-0.04em]">{s.limit}</p>
-            </div>
-            <div className="panel p-8">
-              <p className="text-sm text-muted">First unlock</p>
-              <p className="mt-4 text-[1.05rem] font-medium text-ink">{s.unlock}</p>
-            </div>
-          </div>
-        </Container>
-      </Section>
-
-      <Ladder rungs={toRungs(s.timeline)} title="Month by month." lede="" />
+      <ProductHero kicker={`${s.label} card`} title={s.headline} sub={s.sub} visual={<SingleCard segment={segment} />} />
+      <Points
+        title="What counts as evidence."
+        items={[
+          { t: "We read", b: s.evidence.join(", ") + "." },
+          { t: "Starting line", b: `${s.limit}, illustrative. Sized to your capacity after rent and essentials, not to a score you don’t have yet.` },
+          { t: "First unlock", b: s.unlock + "." },
+          { t: "The coach’s focus", b: s.coachFocus },
+          { t: "The risk we plan for", b: s.risk },
+        ]}
+      />
+      <Ladder rungs={toRungs(s.timeline)} title="Month by month." />
       <Faq items={s.faq} title={`Questions ${s.plural.toLowerCase()} ask.`} />
-
       <section className="border-t border-hairline py-8">
         <Container>
           <p className="text-sm text-muted">

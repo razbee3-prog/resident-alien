@@ -96,7 +96,7 @@
   .panel {
     background: var(--color-surface);
     border: 1px solid var(--color-hairline);
-    border-radius: 1.25rem;
+    border-radius: 0.9rem;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
   .panel-2 {
@@ -246,17 +246,6 @@
     color: rgba(255, 255, 255, 0.88);
     text-shadow: 0 1px 0 rgba(0, 0, 0, 0.75), 0 -1px 0 rgba(255, 255, 255, 0.05);
   }
-  .rcard-pill {
-    font-family: var(--font-mono);
-    font-size: 2.7cqw;
-    letter-spacing: 0.14em;
-    padding: 1.6cqw 2.6cqw;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(6px);
-  }
   .rcard-row { display: flex; align-items: flex-end; gap: 5cqw; }
   .rcard-chip {
     position: relative;
@@ -320,6 +309,55 @@
     white-space: nowrap;
   }
   .rcard-wave { width: 7cqw; height: 7cqw; opacity: 0.8; color: rgba(255, 255, 255, 0.9); }
+  .rcard-visa { height: 6.5cqw; width: auto; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)); }
+
+  /* landscape variant: sizes re-tuned because cqw follows the wider edge */
+  .rcard--landscape { aspect-ratio: 85.6 / 54; border-radius: 4.6cqw; padding: 0.7cqw; }
+  .rcard--landscape .rcard-face { inset: 0.7cqw; border-radius: 3.9cqw; background-size: 7.6cqw 7.6cqw; }
+  .rcard--landscape .rcard-spec { background: radial-gradient(60cqw circle at var(--mx) var(--my), rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 45%, transparent 70%); }
+  .rcard--landscape .rcard-body { padding: 4.4cqw 5cqw 4.2cqw; }
+  .rcard--landscape .rcard-mark { font-size: 2.1cqw; }
+  .rcard--landscape .rcard-row { gap: 3cqw; align-items: center; }
+  .rcard--landscape .rcard-chip { width: 9.6cqw; border-radius: 1.3cqw; }
+  .rcard--landscape .rcard-pinwrap { gap: 1cqw; }
+  .rcard--landscape .rcard-pin { width: 8.2cqw; border-radius: 1.1cqw; padding: 0.35cqw; }
+  .rcard--landscape .rcard-pin img { border-radius: 0.8cqw; }
+  .rcard--landscape .rcard-pin::after { inset: 0.35cqw; border-radius: 0.8cqw; }
+  .rcard--landscape .rcard-from { font-size: 1.7cqw; }
+  .rcard--landscape .rcard-num { font-size: 3.1cqw; letter-spacing: 0.18em; }
+  .rcard--landscape .rcard-name { font-size: 2.3cqw; }
+  .rcard--landscape .rcard-meta { font-size: 1.7cqw; margin-top: 1cqw; }
+  .rcard--landscape .rcard-wave { width: 4.4cqw; height: 4.4cqw; }
+  .rcard--landscape .rcard-visa { height: 4.4cqw; }
+
+  /* product UI mocks */
+  .mock {
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: 14px;
+    box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+  .mock-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+    font-size: 0.78rem;
+    color: var(--color-muted);
+  }
+  .mock-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+    font-size: 0.9rem;
+  }
+  .mock-row:last-child { border-bottom: 0; }
 }
 
 @layer components {

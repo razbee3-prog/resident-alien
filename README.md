@@ -20,8 +20,11 @@ Node 20+ (built on 22). Next.js 16, React 19, Tailwind v4, TypeScript.
 
 | Route | What it is |
 |---|---|
-| `/` | Landing: brand line, both cards with a country picker, three benefits, two segments, one stat, safety line, waitlist |
-| `/students`, `/professionals` | Segment pages: one card, what counts, month-by-month timeline, FAQ |
+| `/` | Landing: landscape Visa card beside the headline, three product features with UI mocks, the path to a 720–740 file, a card comparison table, one stat, safety, FAQ, waitlist |
+| `/students`, `/professionals`, `/secured` | Card pages: hero card, what counts as evidence, timeline, FAQ |
+| `/ai` | Alien Intelligence, the AI credit-building coach |
+| `/transfers` | Send home, set-and-forget money transfers |
+| `/news` | Sourced policy updates for H-1B and F-1 holders (`src/lib/policy-feed.ts`) |
 | `/safety` | Crowdsourced enforcement-activity map, rights, hotlines |
 | `/waitlist`, `/about`, `/legal/*` | Form, mission, disclosures / privacy / terms |
 | `/api/waitlist` | POST. Stores a signup |

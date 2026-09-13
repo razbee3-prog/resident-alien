@@ -10,6 +10,7 @@ type Props = {
   country: Country;
   name?: string;
   arrived?: string;
+  orientation?: "portrait" | "landscape";
   interactive?: boolean;
   className?: string;
   style?: CSSProperties;
@@ -22,6 +23,7 @@ export function ResidentCard({
   country,
   name = "MAYA AMARI",
   arrived = "09 · 26",
+  orientation = "portrait",
   interactive = true,
   className = "",
   style,
@@ -51,8 +53,8 @@ export function ResidentCard({
       cancelAnimationFrame(raf.current);
       raf.current = requestAnimationFrame(() =>
         setVars({
-          "--ry": `${((x - 0.5) * 18).toFixed(2)}deg`,
-          "--rx": `${((0.5 - y) * 16).toFixed(2)}deg`,
+          "--ry": `${((x - 0.5) * 16).toFixed(2)}deg`,
+          "--rx": `${((0.5 - y) * 14).toFixed(2)}deg`,
           "--mx": `${(x * 100).toFixed(1)}%`,
           "--my": `${(y * 100).toFixed(1)}%`,
           "--gx": `${((x - 0.5) * 70).toFixed(1)}%`,
@@ -69,15 +71,17 @@ export function ResidentCard({
 
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
+  const landscape = orientation === "landscape";
+
   return (
     <div className={`rcard-scene ${className}`} style={style}>
       <div
         ref={ref}
-        className={`rcard ${segment === "student" ? "rcard--student" : ""}`}
+        className={`rcard ${segment === "student" ? "rcard--student" : ""} ${landscape ? "rcard--landscape" : ""}`}
         onPointerMove={onMove}
         onPointerLeave={onLeave}
         role="img"
-        aria-label={`Resident Alien ${segment} card for ${name}, from ${country.name}`}
+        aria-label={`Resident Alien ${segment} Visa card for ${name}, from ${country.name}`}
       >
         <div className="rcard-face">
           <div className="rcard-gloss" aria-hidden="true" />
@@ -98,6 +102,7 @@ export function ResidentCard({
               <div className="rcard-chip" aria-hidden="true">
                 <ChipContacts />
               </div>
+              <Contactless />
             </div>
 
             <div className="rcard-num">•••• •••• •••• 0001</div>
@@ -107,7 +112,7 @@ export function ResidentCard({
                 <div className="rcard-name">{name}</div>
                 <div className="rcard-meta">ARRIVED {arrived}</div>
               </div>
-              <Contactless />
+              <VisaMark />
             </div>
           </div>
         </div>
@@ -134,6 +139,16 @@ function Contactless() {
       <path d="M9.5 6.5a9.5 9.5 0 0 1 0 11" />
       <path d="M12.5 4.5a13 13 0 0 1 0 15" />
       <path d="M15.5 2.5a16.5 16.5 0 0 1 0 19" />
+    </svg>
+  );
+}
+
+function VisaMark() {
+  return (
+    <svg className="rcard-visa" viewBox="0 0 70 24" role="img" aria-label="Visa">
+      <text x="1" y="21" fontFamily="'Arial Black', 'Helvetica Neue', Arial, sans-serif" fontWeight="900" fontStyle="italic" fontSize="26" fill="#f4f4f8" letterSpacing="-1.5">
+        VISA
+      </text>
     </svg>
   );
 }

@@ -25,7 +25,7 @@ export const segments: Record<Segment, SegmentContent> = {
     pill: "PROFESSIONAL",
     href: "/professionals",
     headline: "Your offer letter is your credit history.",
-    sub: "Open a U.S. credit line on a signed offer, before your first paycheck. Build from day one. Get to your choice of premium cards faster.",
+    sub: "A Visa credit card approved on a signed offer, before your first paycheck. Reassessed the day payroll lands.",
     evidence: [
       "Offer letter and start date",
       "Salary, then payroll once it lands",
@@ -72,7 +72,7 @@ export const segments: Record<Segment, SegmentContent> = {
     pill: "STUDENT",
     href: "/students",
     headline: "A real credit score before you graduate.",
-    sub: "Open a U.S. credit line on your I-20 and funding, before your first semester ends. Graduate with a score, not a blank.",
+    sub: "A Visa credit card approved on your I-20 and funding, before your first semester ends. Graduate with a score, not a blank.",
     evidence: [
       "I-20 and enrollment",
       "Scholarship, sponsor, or family funds",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Rights } from "@/components/safety/rights";
 import { SafetyApp } from "@/components/safety/safety-app";
-import { Container, Eyebrow } from "@/components/ui";
+import { Container } from "@/components/ui";
 import { disclosures } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function SafetyPage() {
         <Container>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-[44rem]">
-              <Eyebrow>Safety center</Eyebrow>
+              <p className="text-sm font-medium text-accent">Safety center</p>
               <h1 className="mt-4 text-[2.6rem] font-bold leading-[1] tracking-[-0.035em] sm:text-[3.4rem]">Know what’s happening around you.</h1>
               <p className="mt-6 max-w-[38rem] text-lg leading-relaxed text-muted">
                 Reported enforcement hotspots and community reports on one map, and your rights one scroll away. Kept separate from your money, by design.

@@ -6,8 +6,11 @@ const columns = [
   {
     title: "Product",
     links: [
-      { href: "/students", label: "For students" },
-      { href: "/professionals", label: "For professionals" },
+      { href: "/students", label: "Student card" },
+      { href: "/professionals", label: "Professional card" },
+      { href: "/secured", label: "Secured card" },
+      { href: "/ai", label: "Alien Intelligence" },
+      { href: "/transfers", label: "Send home" },
       { href: "/waitlist", label: "Join the waitlist" },
     ],
   },
@@ -48,7 +51,7 @@ export function Footer() {
               <span className="font-mono text-[0.78rem] uppercase tracking-[0.2em]">Resident Alien</span>
             </div>
             <p className="mt-5 max-w-[22rem] text-sm leading-relaxed text-muted">
-              Credit for people who just got here. Built for international students and newly arrived professionals.
+              A Visa credit card for people who just got here. Built for international students and newly arrived professionals.
             </p>
           </div>
           {columns.map((col) => (

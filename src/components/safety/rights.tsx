@@ -48,7 +48,7 @@ export function Rights() {
       <Section id="rights">
         <Container>
           <div className="max-w-[44rem]">
-            <p className="eyebrow">Know your rights</p>
+            <p className="text-sm font-medium text-accent">Know your rights</p>
             <h2 className="mt-3 text-[2rem] font-bold leading-[1.05] tracking-[-0.025em] md:text-[2.75rem]">Eight things to know before it matters.</h2>
             <p className="mt-5 max-w-[38rem] text-lg leading-relaxed text-muted">
               These apply to everyone in the United States, whatever your status. They are general information, not legal
@@ -72,7 +72,7 @@ export function Rights() {
       <Section id="hotlines">
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <div>
-            <p className="eyebrow">Hotlines and guides</p>
+            <p className="text-sm font-medium text-accent">Hotlines and guides</p>
             <h2 className="mt-3 text-[2rem] font-bold leading-[1.05] tracking-[-0.025em]">The numbers that answer.</h2>
             <p className="mt-5 text-[0.95rem] leading-relaxed text-muted">
               Save the first one in your phone now. These organizations are not affiliated with Resident Alien; we list them
