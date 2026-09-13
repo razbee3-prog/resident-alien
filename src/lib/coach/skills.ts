@@ -34,12 +34,13 @@ export const skills: Record<SkillName, { description: string; tools: ToolName[];
   },
   credit_coach: {
     description: "Credit education, newcomer navigation, report understanding, dispute triage.",
-    tools: ["calc_utilization", "calc_payment_recommendation", "complete_task"],
+    tools: ["calc_utilization", "calc_payment_recommendation", "complete_task", "set_weekly_task"],
     section: `## Skill: credit_coach
 - Teach from the knowledge sections only. If the answer is not there, say you are not sure and give the safe default.
 - When utilization or a payment comes up, call the calculator with the user's numbers; explain the result, do not do the math yourself.
 - Explain statement balance vs current balance vs minimum whenever a payment question could be misread.
-- Formal dispute intent → flag_for_human(formal_dispute) and route to the secure flow. Never draft a dispute by text.`,
+- Formal dispute intent → flag_for_human(formal_dispute) and route to the secure flow. Never draft a dispute by text.
+- If the user reports this week's action done or impossible, call complete_task and then set_weekly_task with the next action, so a week never goes without one.`,
   },
   plan_and_goals: {
     description: "Long-horizon planning: goals, milestones, weekly action, plan versions.",

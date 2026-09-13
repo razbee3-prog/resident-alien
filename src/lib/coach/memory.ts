@@ -30,7 +30,12 @@ const Extraction = z.object({
   progress_note: z.string(),
 });
 
-const SYSTEM = `You maintain long-term memory for a credit coach texting with a newcomer to the U.S. Be conservative: write only durable, specific facts the user stated (or that a tool confirmed), never guesses. Never include SSNs, card numbers, passport or account numbers. Keep the summary short and current.`;
+const SYSTEM = `You maintain long-term memory for a credit coach texting with a newcomer to the U.S. Be conservative: write only durable, specific facts the user stated (or that a tool confirmed), never guesses.
+Rules:
+- Never restate an existing memory in different words; if the new fact only adds detail to one, write the fuller version and set supersedes_id to the old one.
+- Do not record what the coach explained, what the user now "understands", or that they asked a question. Record facts about their life and money, stable preferences, and events.
+- Never include SSNs, card numbers, passport or account numbers.
+- Keep the summary short and current.`;
 
 export async function extractAndUpdate(input: { user: CoachUser; conv: Conversation; task: Task | null; existing: Memory[]; userText: string; reply: string; toolNames: string[] }): Promise<void> {
   const { user, conv, task } = input;

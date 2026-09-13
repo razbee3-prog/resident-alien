@@ -57,11 +57,11 @@ export function stageInstruction(stage: OnboardingStage, profile: Profile, opts:
       return "GOAL STAGE. When you know the real-life outcome and a rough date, call set_goal (translate a bare score target into the outcome it unlocks; ask if unclear). After set_goal, ask the FIRST missing context question below. One question per turn.";
     case "context":
       return [
-        "CONTEXT STAGE. Ask ONE missing item per turn, conversationally, and call update_profile as soon as you learn a fact. Missing:",
+        "CONTEXT STAGE. First call update_profile with any facts in the new message. Then ask ONLY the first item still missing from this list, conversationally, nothing else. Missing:",
         ...missingContext(profile).map((m, i) => `${i + 1}. ${m}`),
         missingContext(profile).length === 0
           ? "Context is complete. Now call assess_readiness, then create_plan_version (3 milestones, 2 to 4 replan_if conditions, rationale), then set_weekly_task (one action, due within 7 days). Then send the plan in plain words: the goal, the first milestone, this week's one action, and why."
-          : "Do not build the plan until the list is empty.",
+          : "If the new message supplies every remaining item, do not ask anything: build the plan in this same turn (assess_readiness, create_plan_version, set_weekly_task) and send it in plain words: the goal, the first milestone, this week's one action, and why. Do not ask about check-in days or anything outside the list.",
       ].join("\n");
     case "active":
       return "";

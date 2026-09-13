@@ -105,6 +105,10 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   else {
     routed = await route(text, activeTask?.title ?? null);
     skills = routed.skills as SkillName[];
+    // A task report needs the planning tools (complete_task + set_weekly_task) whatever else was routed.
+    if ((routed.task_signal === "reports_done" || routed.task_signal === "reports_blocked" || routed.task_signal === "wants_new_goal") && !skills.includes("plan_and_goals")) {
+      skills = [...skills, "plan_and_goals"];
+    }
   }
 
   const conv = await store.getConversation(userId);
