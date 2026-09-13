@@ -26,6 +26,7 @@ export interface Db {
   update<T extends Record<string, unknown>>(table: string, match: Record<string, unknown>, patch: Partial<T>): Promise<T[]>;
   /** Atomically take the per-user turn lock. */
   acquireLock(userId: string, untilIso: string): Promise<boolean>;
+  releaseLock(userId: string): Promise<void>;
 }
 
 export const coachAvailable = storageMode !== "demo";
@@ -71,6 +72,10 @@ const liveDb: Db = {
       .select("user_id");
     if (error) throw new Error(`lock: ${error.message}`);
     return (data?.length ?? 0) > 0;
+  },
+  async releaseLock(userId) {
+    const { error } = await supabase().from("coach_conversations").update({ lock_until: null }).eq("user_id", userId);
+    if (error) throw new Error(`unlock: ${error.message}`);
   },
 };
 
@@ -146,6 +151,10 @@ const localDb: Db = {
     if (held && held > now) return false;
     locks.set(userId, new Date(untilIso).getTime());
     return true;
+  },
+  async releaseLock(userId) {
+    locks.delete(userId);
+    await localDb.update("coach_conversations", { user_id: userId }, { lock_until: null });
   },
 };
 

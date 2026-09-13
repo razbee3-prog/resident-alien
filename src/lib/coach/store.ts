@@ -72,7 +72,7 @@ export async function acquireTurnLock(userId: string, ttlMs = 90_000): Promise<b
 }
 
 export async function releaseTurnLock(userId: string): Promise<void> {
-  await db.update<Conversation>("coach_conversations", { user_id: userId }, { lock_until: null });
+  await db.releaseLock(userId);
 }
 
 /* -------------------------------- messages ------------------------------ */
