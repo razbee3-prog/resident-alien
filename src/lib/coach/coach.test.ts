@@ -118,7 +118,19 @@ describe("text", () => {
 
 describe("score page", () => {
   it("detects login pages and score pages", async () => {
-    const { looksLikeLoginPage, scoreDelta } = await import("./score-page");
+    const { looksLikeLoginPage, scoreDelta, isHandoffPage, connectedNote, scoreLine } = await import("./score-page");
+    // Intuit's post-login hand-off: not a login page, not readable either.
+    assert.equal(isHandoffPage("https://www.creditkarma.com/update?code=abc_us-central1_auth-v2-id-token&redirectUrl=http%3A%2F%2Fwww.creditkarma.com%2F"), true);
+    assert.equal(isHandoffPage("https://www.creditkarma.com/update?redirectUrl=x&code=abc"), true);
+    assert.equal(isHandoffPage("https://www.creditkarma.com/credit-health/transunion/main"), false);
+    assert.equal(isHandoffPage("https://www.creditkarma.com/update"), false);
+    assert.equal(looksLikeLoginPage("https://www.creditkarma.com/update?code=x", "Today Credit Cards Loans Money"), false);
+    // The Credit Health page at phone width.
+    assert.equal(looksLikeLoginPage("https://www.creditkarma.com/credit-health/transunion/main", "Credit Health TransUnion Equifax 814out of 850 ▲ 16 Points • Checked Daily Scores checked daily with VantageScore 3.0"), false);
+    const facts = { score: 814, score_model: "VantageScore 3.0", bureau: "TransUnion", as_of: "2026-09-13", confidence: "high", utilization_percent: 4, on_time_percent: 100, total_accounts: 6, derogatory_marks: 0, observations: "Six accounts, all current." };
+    assert.equal(scoreLine(facts), "814 VantageScore 3.0, TransUnion, as of 2026-09-13");
+    assert.equal(scoreLine({ ...facts, score: null }), "no score legible");
+    assert.match(connectedNote(facts), /score 814 VantageScore 3.0, TransUnion, as of 2026-09-13 \(confidence high\)\. Utilization 4%, on-time 100%, accounts 6, derogatory 0\./);
     assert.equal(looksLikeLoginPage("https://www.creditkarma.com/auth/logon", ""), true);
     assert.equal(looksLikeLoginPage("https://www.creditkarma.com/", "Log in to Credit Karma. Forgot password? Create an account"), true);
     assert.equal(looksLikeLoginPage("https://www.creditkarma.com/", "Welcome back, Raz. Your score 612 VantageScore 3.0 · TransUnion · Updated today. Credit factors"), false);

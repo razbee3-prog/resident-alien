@@ -102,9 +102,11 @@ export function stageInstruction(stage: OnboardingStage, profile: Profile, opts:
 }
 
 /** Instruction for the turn that runs right after a Credit Karma read: summarize, plan, explain the long game. */
-export function connectedInstruction(): string {
+export function connectedInstruction(opts: { inbound?: boolean } = {}): string {
   return [
-    "CREDIT KARMA CONNECTED. The Notes below hold what was just read from their account. There is no new user message; you are initiating.",
+    opts.inbound
+      ? "CREDIT KARMA CONNECTED. The Notes below hold what was just read from their account. Answer their new message with this:"
+      : "CREDIT KARMA CONNECTED. The Notes below hold what was just read from their account. There is no new user message; you are initiating.",
     "1. Summarize what you see in two or three plain sentences: the score with model, bureau, and date, and the observations (accounts, utilization, on-time history, anything flagged). No guarantees, no estimates beyond what was read.",
     "2. Call assess_readiness, then create_plan_version (milestones toward their target, 2 to 4 replan_if conditions, assumptions naming any money facts you still lack), then set_weekly_task (the single highest-value safe action for this week, due within 7 days).",
     "3. Explain the long game in plain words, one short paragraph: the path from today's score to the target and roughly what has to be true (on-time history, reported utilization under 10%, no unnecessary applications, time), what you will monitor and when (weekly score re-check through Credit Karma, due dates before they hit, utilization before statements close, reporting after they open anything), and the two or three practices that matter most for them right now.",

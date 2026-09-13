@@ -102,18 +102,26 @@ export function ConnectClient({ token }: { token: string }) {
     }
   }
 
-  async function complete() {
+  async function complete(attempt = 0) {
     setBusy(true);
     setPhase("reading");
-    setMessage("Reading your score page… this takes about 20 seconds.");
+    setMessage(attempt === 0 ? "Reading your score page… about 30 seconds." : "Trying once more… about 30 seconds.");
     try {
       const res = await fetch(`/api/connect/${token}/complete`, { method: "POST" });
-      const json = (await res.json()) as { ok: boolean; score?: number | null; reason?: string; notes?: string; error?: string };
+      const json = (await res.json()) as { ok: boolean; score?: number | null; reason?: string; notes?: string; error?: string; followup?: "sent" | "pending" };
       if (json.ok) {
         keyboard.current?.close();
         setPhase("done");
-        setMessage(json.score !== null && json.score !== undefined ? `Done. Your score is ${json.score}. Check your texts.` : "Connected, but no score was visible on the page yet. Check your texts for what to do next.");
+        const scored = json.score !== null && json.score !== undefined;
+        const next = json.followup === "pending" ? "Text Credit Alien anything and it will reply with your summary and plan." : "Credit Alien is texting your summary and plan now. Go back to Messages.";
+        setMessage(scored ? `Done. Your score is ${json.score}. ${next}` : `Connected, but no score was visible on the page yet. ${next}`);
       } else if (json.reason === "not_logged_in") {
+        // Credit Karma can still be on its post-login hand-off when the first read happens; one more try usually lands.
+        if (attempt === 0 && !/login|log in|sign in|password/i.test(json.notes ?? "")) {
+          setMessage("Credit Karma was still loading. Trying once more in a few seconds…");
+          await new Promise((r) => setTimeout(r, 6000));
+          return complete(1);
+        }
         setPhase("login");
         setMessage(`Not logged in yet${json.notes ? ` (${json.notes})` : ""}. Finish the login below, then tap the button again.`);
       } else {
@@ -211,7 +219,7 @@ export function ConnectClient({ token }: { token: string }) {
 
       {phase === "login" || phase === "reading" ? (
         <div className="mt-5 flex flex-wrap gap-3">
-          <button type="button" className="btn btn-primary" disabled={busy || phase === "reading"} onClick={complete}>
+          <button type="button" className="btn btn-primary" disabled={busy || phase === "reading"} onClick={() => void complete()}>
             {phase === "reading" ? "Reading…" : "I’m logged in, read my score"}
           </button>
         </div>

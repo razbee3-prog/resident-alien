@@ -32,6 +32,8 @@ export type Profile = {
   preferred_checkin?: string;
   /** Set only when the database column couldn't store a new stage value; see store.setStage. */
   stage_hint?: OnboardingStage;
+  /** A Credit Karma read whose coach follow-up (summary, plan, long game) hasn't been delivered yet; the next turn carries it. */
+  pending_followup?: { note: string; at: string };
 };
 
 export type CoachUser = {

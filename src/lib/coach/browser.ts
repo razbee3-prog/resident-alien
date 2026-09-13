@@ -1,6 +1,7 @@
 import "server-only";
 import Browserbase from "@browserbasehq/sdk";
 import { chromium, type Page } from "playwright-core";
+import { isHandoffPage } from "./score-page";
 import { extractScore, looksLikeLoginPage, type ScoreExtraction } from "./score-vision";
 
 /**
@@ -10,6 +11,8 @@ import { extractScore, looksLikeLoginPage, type ScoreExtraction } from "./score-
 export { browserEnabled } from "./browser-flag";
 export const PROVIDER_HOME = "https://www.creditkarma.com/";
 export const PROVIDER_LOGIN = "https://www.creditkarma.com/auth/logon";
+/** The logged-in score page ("NNN out of 850", bureau tab, model). The home page bounces through an auth hand-off that can hang. */
+export const PROVIDER_SCORE = "https://www.creditkarma.com/credit-health";
 export type Device = "laptop" | "phone";
 
 let client: Browserbase | null = null;
@@ -85,20 +88,36 @@ export async function openLoginPage(connectUrl: string): Promise<string | null> 
   }
 }
 
-export type ReadResult = { loggedIn: boolean; url: string; extraction: ScoreExtraction | null };
+export type ReadResult = { loggedIn: boolean; url: string; extraction: ScoreExtraction | null; reason?: string };
 
-/** Go to the provider home and read the score page: cheap login-page detection first, then vision. */
+/** Open the score page and read it: cheap login-page detection first, then vision. */
 export async function captureAndRead(connectUrl: string): Promise<ReadResult> {
   return withPage(connectUrl, async (page) => {
-    await page.goto(PROVIDER_HOME, { waitUntil: "domcontentloaded", timeout: 45_000 }).catch(() => {});
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
-    await page.waitForTimeout(2_000);
+    const bodyText = () => page.evaluate(() => document.body?.innerText ?? "").catch(() => "");
+    const open = async (timeout: number) => {
+      await page.goto(PROVIDER_SCORE, { waitUntil: "domcontentloaded", timeout }).catch(() => {});
+      await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+      await page.waitForTimeout(1_500);
+    };
+    await open(45_000);
+    let text = await bodyText();
+    // A logged-in visit can bounce through Intuit's hand-off page or show only the app shell while it loads. Give it a
+    // moment, then ask for the score page once more before deciding anything.
+    if (isHandoffPage(page.url()) || text.trim().length < 80) {
+      await page.waitForURL((u) => !isHandoffPage(u.toString()), { timeout: 10_000 }).catch(() => {});
+      await page.waitForTimeout(1_500);
+      text = await bodyText();
+      if (isHandoffPage(page.url()) || text.trim().length < 80) {
+        await open(30_000);
+        text = await bodyText();
+      }
+    }
     const url = page.url();
-    const text = await page.evaluate(() => document.body?.innerText ?? "").catch(() => "");
-    if (looksLikeLoginPage(url, text)) return { loggedIn: false, url, extraction: null };
+    if (looksLikeLoginPage(url, text)) return { loggedIn: false, url, extraction: null, reason: "Still on the login page." };
+    if (isHandoffPage(url)) return { loggedIn: false, url, extraction: null, reason: "Credit Karma was still loading (sign-in hand-off page)." };
     const png = await page.screenshot({ type: "png", fullPage: false });
     const extraction = await extractScore({ pngBase64: png.toString("base64"), pageText: text, provider: "Credit Karma" });
-    return { loggedIn: extraction.logged_in, url, extraction };
+    return { loggedIn: extraction.logged_in, url, extraction, reason: extraction.logged_in ? undefined : extraction.notes };
   });
 }
 

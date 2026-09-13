@@ -4,7 +4,7 @@ import { buildPacket, renderPacket } from "./context";
 import { agentLoop } from "./llm";
 import { extractAndUpdate } from "./memory";
 import { browserEnabled } from "./browser-flag";
-import { effectiveStage, parseButtonPrefill, situationKnown, stageInstruction } from "./onboarding";
+import { connectedInstruction, effectiveStage, parseButtonPrefill, situationKnown, stageInstruction } from "./onboarding";
 import { IMMIGRATION_REFERRAL, OUTBOUND_FALLBACK, PII_WARNING, isImmigrationStatusQuestion, outboundProblems } from "./policy";
 import { route, type Route } from "./router";
 import { extractScore, fetchImage } from "./score-vision";
@@ -12,6 +12,7 @@ import { sendblueProvider } from "./sendblue";
 import type { SkillName } from "./skills";
 import * as store from "./store";
 import type { CoachUser, Message, MessagingProvider, OnboardingStage } from "./types";
+import { readThroughConnection } from "./weekly";
 
 const DEBOUNCE_MS = 2500;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -138,10 +139,34 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   const conv = await store.getConversation(userId);
   const recent = (await store.recentMessages(userId, 14)).filter((m) => !ids.includes(m.id)).slice(-12);
   const packet = await buildPacket(user, conv, recent);
-  const instruction = stageInstruction(stage, user.profile, { prefill, browserEnabled });
+  let instruction = stageInstruction(stage, user.profile, { prefill, browserEnabled });
   const notes: string[] = [];
   const screenshotNote = await readTextedScreenshot(userId, pending);
   if (screenshotNote) notes.push(screenshotNote);
+
+  // Credit Karma through the saved session. "Check my score" once active, or any nudge about it while a link is open,
+  // reads the score here (inside the webhook's budget) so the reply quotes a fresh number instead of another login link.
+  // A read that lands before the plan exists, or a follow-up an earlier invocation never delivered, becomes the
+  // connected presentation: summary, plan v1, the long game.
+  const pendingFollowup = user.profile.pending_followup?.note ?? null;
+  let followup: string | null = pendingFollowup;
+  let issuedLinkUrl: string | null = null;
+  const wantsScore = routed ? routed.task_signal === "wants_score_check" : stage === "connect" && /score|karma|log+ed|connect|done|did it|finished|read it/i.test(text);
+  if (wantsScore && !screenshotNote) {
+    const read = await readThroughConnection(user, { timeoutMs: 60_000, relinkTtlMinutes: 15, allowPending: true });
+    if (read?.kind === "fresh") {
+      if (stage === "active" && !followup) notes.push(`Fresh Credit Karma read just now through the saved session: ${read.line}. Quote it with model, bureau, and date and tie it to the plan. No new link is needed; do not call request_credit_link.`);
+      else followup = read.note;
+    } else if (read?.kind === "relogin") {
+      issuedLinkUrl = read.linkUrl;
+      notes.push(`The saved Credit Karma session has expired. A fresh link was already issued, so do not call request_credit_link. Put this exact URL in your reply on its own line and ask them to log in again (phone or laptop): ${read.linkUrl}`);
+    }
+  }
+  if (followup) {
+    notes.push(followup);
+    instruction = connectedInstruction({ inbound: true });
+    for (const s of ["onboarding", "plan_and_goals", "credit_coach"] as SkillName[]) if (!skills.includes(s)) skills = [...skills, s];
+  }
   if (piiFlagged) notes.push("Sensitive data in the user's message was removed and a security warning was already sent. Do not repeat the warning; do not ask for the data.");
   if (routed?.sensitive && routed.sensitive !== "none" && routed.sensitive !== "sensitive_data") notes.push(`Router flagged: ${routed.sensitive}. Follow the operations playbook and call flag_for_human if it applies.`);
   if (routed?.task_signal && routed.task_signal !== "none") notes.push(`Router: task_signal=${routed.task_signal}.`);
@@ -173,7 +198,8 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
     }
   }
   if (!reply) reply = "Got it. What would you like to tackle next?";
-  if (loop.effects.linkUrl && !reply.includes(loop.effects.linkUrl)) reply = `${reply.replace(/\[[^\]]*link[^\]]*\]/gi, "").trim()}\n\n${loop.effects.linkUrl}`;
+  const linkUrl = loop.effects.linkUrl ?? issuedLinkUrl;
+  if (linkUrl && !reply.includes(linkUrl)) reply = `${reply.replace(/\[[^\]]*link[^\]]*\]/gi, "").trim()}\n\n${linkUrl}`;
   if (piiFlagged) reply = `${PII_WARNING}\n\n${reply}`;
 
   // Stage advancement from tool effects and profile facts.
@@ -193,6 +219,8 @@ async function processBatch(userId: string, pending: Message[], provider: Messag
   }
 
   const result = await finish(reply, { stage: nextStage, skills, intent: routed?.intent ?? (stage === "active" ? null : `onboarding_${stage}`), packet, log: loop.log, usage: loop.usage, model: loop.model, policy, error: loop.refused ? "refusal" : null });
+  // The follow-up reached them: drop the marker (kept if the send failed so the next turn tries again).
+  if (followup && !result.error?.includes("send_failed")) await store.clearPendingFollowup(userId).catch((e) => console.warn("clear follow-up failed", e));
 
   // Post-turn memory pass (async-safe: we are already inside after()). Never let it mask a delivered reply.
   try {

@@ -24,7 +24,8 @@ export const ScoreExtraction = z.object({
 });
 export type ScoreExtraction = z.infer<typeof ScoreExtraction>;
 
-const SYSTEM = `You read credit-monitoring pages for a coaching app. Report only what is visibly on the page. If the page is a login, verification, captcha, or error page, set logged_in false and score null. If two scores are shown (e.g. TransUnion and Equifax), report the first and mention the second in notes.`;
+const SYSTEM = `You read credit-monitoring pages for a coaching app. Report only what is visibly on the page. If the page is a login, verification, captcha, or error page, or shows only a navigation bar with a loading spinner, set logged_in false and score null. If two scores are shown (e.g. TransUnion and Equifax), report the first and mention the second in notes.
+Credit Karma layout: on the Credit Health page "NNN out of 850" is the score; the selected tab (TransUnion or Equifax) is the bureau; "Scores checked daily with VantageScore 3.0" gives the score model; "Checked Daily" with no explicit date means as_of is today's date given in the message. On the Today page each gauge shows a score with its bureau underneath.`;
 
 export type ImageMediaType = "image/png" | "image/jpeg" | "image/gif" | "image/webp";
 
@@ -34,7 +35,7 @@ export async function extractScore(input: { pngBase64?: string; image?: { base64
   else if (input.image) content.push({ type: "image", source: { type: "base64", media_type: input.image.mediaType, data: input.image.base64 } });
   content.push({
     type: "text",
-    text: `Provider: ${input.provider}.${input.pageText ? `\n\nVisible page text (may be truncated):\n${input.pageText.slice(0, 6000)}` : ""}\n\nExtract the score information.`,
+    text: `Provider: ${input.provider}. Today is ${new Date().toISOString().slice(0, 10)}.${input.pageText ? `\n\nVisible page text (may be truncated):\n${input.pageText.slice(0, 6000)}` : ""}\n\nExtract the score information.`,
   });
   const res = await anthropic().messages.parse({
     model: MODELS.chat,

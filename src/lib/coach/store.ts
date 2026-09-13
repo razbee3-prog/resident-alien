@@ -311,6 +311,21 @@ export async function resetUser(userId: string): Promise<Record<string, number>>
 }
 
 /** Advance the onboarding stage. If the column's check constraint rejects a new value, store the legacy value and keep the real stage in profile.stage_hint. */
+/** Remember that a Credit Karma read still owes the user its coach follow-up (summary, plan, long game). */
+export async function setPendingFollowup(userId: string, note: string): Promise<void> {
+  const user = await getUser(userId);
+  if (!user) return;
+  await updateUser(userId, { profile: { ...user.profile, pending_followup: { note, at: new Date().toISOString() } } });
+}
+
+export async function clearPendingFollowup(userId: string): Promise<void> {
+  const user = await getUser(userId);
+  if (!user?.profile.pending_followup) return;
+  const profile = { ...user.profile };
+  delete profile.pending_followup;
+  await updateUser(userId, { profile });
+}
+
 export async function setStage(user: CoachUser, stage: OnboardingStage, extra: Partial<CoachUser> = {}): Promise<CoachUser> {
   const hintless = { ...user.profile } as Profile & { stage_hint?: OnboardingStage };
   delete hintless.stage_hint;
