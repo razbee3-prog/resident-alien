@@ -25,7 +25,7 @@ export const segments: Record<Segment, SegmentContent> = {
     pill: "PROFESSIONAL",
     href: "/professionals",
     headline: "Your offer letter is your credit history.",
-    sub: "A Visa credit card approved on a signed offer, before your first paycheck. Reassessed the day payroll lands.",
+    sub: "A Visa credit card approved on a signed U.S. job offer, before your first paycheck. Reassessed the day payroll lands.",
     evidence: [
       "Offer letter and start date",
       "Salary, then payroll once it lands",
@@ -48,8 +48,8 @@ export const segments: Record<Segment, SegmentContent> = {
     ],
     faq: [
       {
-        q: "I haven’t started yet. Can I apply?",
-        a: "That’s the point. A signed offer letter with a start date, plus savings to cover the gap, is evidence. Your line is reassessed when the first payroll deposit lands.",
+        q: "I haven’t started the job yet. Can I apply?",
+        a: "That’s the point. A signed offer letter with a start date, plus savings to cover the gap, is evidence. You can begin before you land and finish once you have a U.S. address. Your line is reassessed when the first payroll deposit lands.",
       },
       {
         q: "What if I get laid off?",
@@ -71,7 +71,7 @@ export const segments: Record<Segment, SegmentContent> = {
     plural: "Students",
     pill: "STUDENT",
     href: "/students",
-    headline: "A real credit score before you graduate.",
+    headline: "A real U.S. credit score before you graduate.",
     sub: "A Visa credit card approved on your I-20 and funding, before your first semester ends. Graduate with a score, not a blank.",
     evidence: [
       "I-20 and enrollment",

@@ -13,8 +13,8 @@ export function Hero() {
         <div className="order-1 lg:order-2">
           <h1 className="max-w-[10ch] text-[3.2rem] font-bold leading-[0.95] tracking-[-0.04em] sm:text-[4.2rem] md:text-[5rem]">Land with credit.</h1>
           <p className="mt-6 max-w-[27rem] text-lg leading-snug text-muted md:text-[1.3rem]">
-            A Visa credit card for people who just got here. No U.S. credit history needed. Approved on the evidence you
-            already have.
+            A Visa credit card for people moving to the U.S. No U.S. credit history needed. Approved on your offer letter
+            or your I-20, before you land.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <ButtonLink href="#waitlist" size="lg">
@@ -27,9 +27,9 @@ export function Hero() {
           </div>
           <dl className="mt-12 grid max-w-[30rem] grid-cols-3 divide-x divide-hairline border-t border-hairline pt-5">
             {[
-              ["No history", "No U.S. credit file needed"],
-              ["Days", "not months, to a decision"],
-              ["3 bureaus", "every payment reported"],
+              ["No U.S. history", "No credit file needed to start"],
+              ["Days", "to a decision, not months"],
+              ["3 bureaus", "every payment builds U.S. credit"],
             ].map(([k, v], i) => (
               <div key={k} className={i === 0 ? "pr-4" : "px-4"}>
                 <dt className="font-display text-[1.25rem] font-bold tracking-[-0.02em]">{k}</dt>

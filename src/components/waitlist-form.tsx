@@ -42,7 +42,7 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
         <p className="eyebrow">You’re on the list</p>
         <p className="mt-2 font-display text-2xl font-bold tracking-[-0.02em]">Day one starts when you land.</p>
         <p className="mt-3 max-w-[32rem] text-[0.95rem] leading-relaxed text-muted">
-          We’ll email {email} when the {segment} card opens for people from {country.name}.
+          We’ll email {email} when the {segment} card opens for people moving from {country.name}.
         </p>
       </div>
     );
@@ -86,13 +86,13 @@ export function WaitlistForm({ compact = false }: { compact?: boolean }) {
 
       <div className="grid gap-5 sm:grid-cols-2">
         <CountryPicker
-          label="Coming from"
+          label="Moving from"
           value={country}
           onChange={(c) => setPref("country", c.a2)}
         />
         <div>
           <label htmlFor={`${id}-arrival`} className="label">
-            Arriving or arrived, month
+            When you land, or landed
           </label>
           <input id={`${id}-arrival`} type="month" className="field" value={arrival} onChange={(e) => setArrival(e.target.value)} />
         </div>

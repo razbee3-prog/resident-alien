@@ -28,7 +28,7 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           <div style={{ fontSize: 88, fontWeight: 700, lineHeight: 0.98, letterSpacing: -4, maxWidth: 900 }}>{site.tagline}</div>
           <div style={{ fontSize: 28, color: "#8c8c99", maxWidth: 860, lineHeight: 1.35 }}>
-            A starter U.S. credit line on day one, then a coached path to premium-card eligibility. For students and newly arrived professionals.
+            A Visa credit card for people moving to the U.S. No U.S. credit history needed. Approved on your offer letter or your I-20.
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 20, color: "#5c5c68", letterSpacing: 3 }}>

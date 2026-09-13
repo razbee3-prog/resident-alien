@@ -8,10 +8,10 @@ const cols = [
 ];
 
 const rows: { label: string; values: [string, string, string] }[] = [
-  { label: "Who it’s for", values: ["F-1 students", "H-1B and new hires", "Anyone we can’t approve yet"] },
+  { label: "Who it’s for", values: ["International students on an F-1", "H-1B and other work visas", "Anyone we can’t approve on evidence yet"] },
   { label: "Approved on", values: ["I-20, funding, savings", "Offer letter, payroll, savings", "A refundable deposit"] },
   { label: "Starting line, illustrative", values: ["$500–$1,500", "$1,000–$2,500", "Your deposit, $200–$500"] },
-  { label: "Reports to bureaus", values: ["Yes", "Yes", "Yes"] },
+  { label: "Reports to U.S. bureaus", values: ["Yes", "Yes", "Yes"] },
   { label: "Alien Intelligence", values: ["Included", "Included", "Included"] },
   { label: "Graduates", values: ["Larger line each term", "Reassessed at first payroll", "Deposit back after on-time payments"] },
 ];
@@ -22,7 +22,7 @@ export function CardsTable() {
       <Container>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h2 className="max-w-[16ch] text-[2.4rem] font-bold leading-[0.98] tracking-[-0.035em] md:text-[3.2rem]">One file. Three ways in.</h2>
-          <p className="max-w-[26rem] text-[1rem] text-muted">Same Visa card, same coach, same reporting. The evidence you have decides which one you start on.</p>
+          <p className="max-w-[26rem] text-[1rem] text-muted">Same Visa card, same coach, same reporting. The evidence you’re arriving with decides which one you start on.</p>
         </div>
         <div className="mt-12 overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-[0.95rem]">

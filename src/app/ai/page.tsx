@@ -27,7 +27,7 @@ export default function AiPage() {
         items={[
           { t: "A weekly plan", b: "What to charge, when to pay, where to cap utilization. We say 10%, not 30%, because 10% is what a fast-rising file looks like." },
           { t: "Alerts before damage", b: "A missed autopay, utilization creeping up, an application you shouldn’t submit, your Chase 5/24 count. You hear about it before the bureau does." },
-          { t: "Reporting check", b: "We confirm the bureaus received the right file under the right identifiers, which is where newcomer files most often go wrong." },
+          { t: "Reporting check", b: "We confirm the bureaus received the right file under the right identifiers, which is where files for people new to the U.S. most often go wrong." },
           { t: "The readiness call", b: "The month you look ready for a mainstream card, a mid-tier travel card, and a premium card. Not a guess, a date, revised as you go." },
           { t: "What it never does", b: "Approve credit on its own, set policy, or write the legally required reasons for a decline. People decide; the coach explains." },
         ]}

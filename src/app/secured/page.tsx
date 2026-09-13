@@ -15,7 +15,7 @@ export default function SecuredPage() {
       <ProductHero
         kicker="Secured card"
         title="A deposit-backed start that graduates on its own."
-        sub="If we can’t approve you on your evidence yet, you start here. Same Visa card, same coach, same reporting. Your deposit comes back."
+        sub="If we can’t approve you on your evidence yet, this is where you start. Same Visa card, same coach, same reporting to the U.S. bureaus. Your deposit comes back."
         visual={<SingleCard segment="student" country="NG" />}
       />
       <Points

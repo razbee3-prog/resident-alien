@@ -3,7 +3,7 @@ export const site = {
   url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://resident-alien.com",
   tagline: "Land with credit.",
   description:
-    "A Visa credit card for people who just got here. No U.S. credit history needed. Build credit with an AI coach, send money home, and get to your dream card faster.",
+    "A Visa credit card for people moving to the U.S. No U.S. credit history needed. Build U.S. credit with an AI coach, send money home, and get to your dream card faster.",
   contactEmail: "hello@resident-alien.com",
   /** Sendblue line the "Chat with Credit Alien" button dials (read server-side at build). Null hides the button. */
   chatNumber: process.env.SENDBLUE_NUMBER || process.env.NEXT_PUBLIC_SENDBLUE_NUMBER || null,

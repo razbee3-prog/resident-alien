@@ -4,12 +4,16 @@ export type FaqItem = { q: string; a: string };
 
 export const defaultFaq: FaqItem[] = [
   {
+    q: "I haven’t moved to the U.S. yet. Can I apply?",
+    a: "You can join the waitlist from anywhere. When we open, an application starts with your offer letter or I-20 and finishes once you have a U.S. address, so the card is ready in your first weeks, not your first year.",
+  },
+  {
     q: "Do I need a Social Security number?",
     a: "Professionals get one through their employer and most students get one with on-campus work. If our card partner allows a passport or ITIN start, we’ll say so plainly. We won’t claim it until it’s true.",
   },
   {
     q: "Is it a real Visa credit card?",
-    a: "Yes. It’s a revolving line on the Visa network, issued by our partner bank, that reports to the bureaus. Not a prepaid card, not a debit card with a credit label.",
+    a: "Yes. It’s a revolving line on the Visa network, issued by our partner bank, that reports to the U.S. credit bureaus. Not a prepaid card, not a debit card with a credit label.",
   },
   {
     q: "What if you can’t approve me on my evidence?",
@@ -17,7 +21,7 @@ export const defaultFaq: FaqItem[] = [
   },
   {
     q: "Are you Amex or Chase?",
-    a: "No. We’re the step before them. We’re not affiliated with either, and nobody can guarantee an approval.",
+    a: "No. We’re the step before them: the U.S. credit file they approve. We’re not affiliated with either, and nobody can guarantee an approval.",
   },
 ];
 

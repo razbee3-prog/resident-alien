@@ -5,16 +5,16 @@ import { Arrow, Container } from "@/components/ui";
 const rows = [
   {
     kicker: "The card",
-    title: "Approved without a credit history.",
-    body: "We read what you actually have: an offer letter, an I-20, payroll, funding, savings. A decision in days, a Visa card you can use for rent, a phone, a flight. Every payment reports to the bureaus.",
+    title: "Approved without a U.S. credit history.",
+    body: "U.S. banks want a credit file that takes years to build. You have an offer letter, an I-20, payroll or funding, savings. We read those instead. A decision in days, and a Visa card that covers rent, a phone plan, a laptop, from your first week in the country.",
     href: "/professionals",
     link: "See the cards",
     mock: <EvidenceMock />,
   },
   {
     kicker: "Alien Intelligence",
-    title: "Build credit with a coach that never sleeps.",
-    body: "It tells you what to charge, when to pay, and where to cap utilization. It warns you before a missed payment or a bad application hurts the file, and tells you the month you’re ready for the next card.",
+    title: "Build U.S. credit with a coach that never sleeps.",
+    body: "The rules of U.S. credit are unwritten and expensive to learn by mistake. The coach tells you what to charge, when to pay, and where to cap utilization. It warns you before a missed payment or a wrong application hurts your file, and tells you the month you’re ready for the next card.",
     href: "/ai",
     link: "How the coach works",
     mock: <CoachMock />,
@@ -22,7 +22,7 @@ const rows = [
   {
     kicker: "Send home",
     title: "Send money home. Set it and forget it.",
-    body: "Schedule a transfer to family from your Resident Alien account: one amount, one date, the fee shown before you confirm. The coach tells you what’s safe to send after rent.",
+    body: "Schedule a transfer to family from your Resident Alien account: one amount, one date, the fee shown before you confirm. The coach tells you what’s safe to send after your U.S. rent and bills.",
     href: "/transfers",
     link: "About transfers",
     mock: <TransferMock />,

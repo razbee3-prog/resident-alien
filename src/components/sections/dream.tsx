@@ -1,8 +1,8 @@
 import { Container } from "@/components/ui";
 
 const steps = [
-  { when: "Today", what: "Resident Alien card", detail: "Approved on your evidence. Reporting from the first statement." },
-  { when: "Month 6", what: "Your first score", detail: "Six months of on-time payments is what a FICO score needs to exist." },
+  { when: "Today", what: "Resident Alien card", detail: "Approved on your evidence, before or after you land. Reporting to the U.S. bureaus from the first statement." },
+  { when: "Month 6", what: "Your first U.S. score", detail: "Six months of on-time payments is what a FICO score needs to exist. Your history at home doesn’t count. This does." },
   { when: "Month 12–24", what: "720–740 and ready", detail: "The file that Amex Platinum, Chase Sapphire Reserve, and a mortgage lender actually approve." },
 ];
 
@@ -13,8 +13,9 @@ export function Dream() {
         <div>
           <h2 className="max-w-[12ch] text-[2.4rem] font-bold leading-[0.98] tracking-[-0.035em] md:text-[3.6rem]">Not your forever card. Your fastest way to it.</h2>
           <p className="mt-6 max-w-[28rem] text-[1.05rem] leading-relaxed text-muted">
-            Whatever needs a 720 or 740, a premium card, an apartment without a co-signer, a mortgage, starts with a
-            file. We build the file and tell you when you’re ready. Then you leave. That’s the point.
+            Whatever needs a 720 or 740 U.S. score, a premium card, an apartment without a co-signer, a mortgage, starts
+            with a file that doesn’t exist the day you land. We build it and tell you when you’re ready. Then you move on.
+            That’s the point.
           </p>
         </div>
         <ol className="flex flex-col">

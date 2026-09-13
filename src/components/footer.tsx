@@ -51,7 +51,7 @@ export function Footer() {
               <span className="font-mono text-[0.78rem] uppercase tracking-[0.2em]">Resident Alien</span>
             </div>
             <p className="mt-5 max-w-[22rem] text-sm leading-relaxed text-muted">
-              A Visa credit card for people who just got here. Built for international students and newly arrived professionals.
+              A Visa credit card for people moving to the U.S. Built for international students and professionals on work visas.
             </p>
           </div>
           {columns.map((col) => (

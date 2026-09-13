@@ -3,7 +3,7 @@ import { SegmentPage } from "@/components/segment-page";
 import { segments } from "@/lib/segments";
 
 export const metadata: Metadata = {
-  title: "For international students",
+  title: "Student card",
   description: segments.student.sub,
 };
 
