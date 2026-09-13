@@ -321,3 +321,9 @@ export async function setStage(user: CoachUser, stage: OnboardingStage, extra: P
     return await updateUser(user.id, { ...extra, onboarding_stage: legacyStageColumn(stage), profile: { ...hintless, stage_hint: stage } as Profile });
   }
 }
+
+/** Other still-open links for this user (each holds a live browser session). */
+export async function listOpenLinkTokens(userId: string, exceptToken?: string): Promise<LinkToken[]> {
+  const rows = await db.select<LinkToken>("coach_link_tokens", { eq: { user_id: userId, status: "opened" } });
+  return rows.filter((r) => r.token !== exceptToken);
+}

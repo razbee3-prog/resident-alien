@@ -27,8 +27,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/connect/[token]
     console.error("browser module failed to load", e);
     return NextResponse.json({ ok: false, error: `Browser module failed to load: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 });
   }
-  const { createContext, createSession, liveViewUrl, openLoginPage } = browser;
+  const { createContext, createSession, liveViewUrl, openLoginPage, releaseSession } = browser;
   try {
+    // One live session per user: release any earlier link's session so a retry never hits the concurrency cap.
+    for (const old of await store.listOpenLinkTokens(link.user_id, token)) {
+      if (old.session_id) await releaseSession(old.session_id);
+      await store.updateLinkToken(old.token, { status: "expired" });
+    }
     const connection = await store.ensureConnection(link.user_id);
     let contextId = connection.context_id;
     if (!contextId) {
