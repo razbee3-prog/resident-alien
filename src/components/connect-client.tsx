@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { RemoteKeyboard } from "./remote-keyboard";
 
-type Phase = "starting" | "login" | "reading" | "done" | "error" | "ended";
+type Phase = "starting" | "login" | "handoff" | "reading" | "done" | "error" | "ended";
 
 /**
  * Hosted-browser login (demo). The user logs into Credit Karma inside a Browserbase live view; "I'm logged in" asks the
  * server to read the score page. On phones the live view takes taps but not the keyboard, so a text box sends what they
  * type to the remote page over the session's own control channel (phone → Browserbase, never through our server).
  */
-export function ConnectClient({ token }: { token: string }) {
+export function ConnectClient({ token, smsHref }: { token: string; smsHref: string | null }) {
   const [phase, setPhase] = useState<Phase>("starting");
   const [device, setDevice] = useState<"laptop" | "phone">("laptop");
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
@@ -102,6 +102,20 @@ export function ConnectClient({ token }: { token: string }) {
     }
   }
 
+  /**
+   * On a phone the tap hands off to Messages: a note is drafted to Credit Alien, and sending it is what triggers the read
+   * (the coach reads this same browser session, then replies in the thread). Laptops read from here and the reply is texted.
+   */
+  function loggedIn() {
+    if (device === "phone" && smsHref) {
+      setPhase("handoff");
+      setMessage("Messages is opening with a note ready to send. Send it, and Credit Alien reads your score and replies right there. Keep this tab open until it does.");
+      window.location.href = smsHref;
+      return;
+    }
+    void complete();
+  }
+
   async function complete(attempt = 0) {
     setBusy(true);
     setPhase("reading");
@@ -109,7 +123,11 @@ export function ConnectClient({ token }: { token: string }) {
     try {
       const res = await fetch(`/api/connect/${token}/complete`, { method: "POST" });
       const json = (await res.json()) as { ok: boolean; score?: number | null; reason?: string; notes?: string; error?: string; followup?: "sent" | "pending" };
-      if (json.ok) {
+      if (res.status === 409) {
+        keyboard.current?.close();
+        setPhase("done");
+        setMessage("Credit Alien already read it. Check your texts.");
+      } else if (json.ok) {
         keyboard.current?.close();
         setPhase("done");
         const scored = json.score !== null && json.score !== undefined;
@@ -136,14 +154,14 @@ export function ConnectClient({ token }: { token: string }) {
     }
   }
 
-  const phoneKeys = device === "phone" && phase === "login";
+  const phoneKeys = device === "phone" && (phase === "login" || phase === "handoff");
 
   return (
     <div className="mt-4">
       <h1 className="text-2xl font-bold tracking-[-0.02em] md:text-3xl">Connect your Credit Karma.</h1>
       <p className="mt-2 text-muted">{message}</p>
 
-      {liveUrl && (phase === "login" || phase === "reading") ? (
+      {liveUrl && (phase === "login" || phase === "handoff" || phase === "reading") ? (
         <div className="panel mt-5 overflow-hidden">
           <iframe
             src={liveUrl}
@@ -219,8 +237,19 @@ export function ConnectClient({ token }: { token: string }) {
 
       {phase === "login" || phase === "reading" ? (
         <div className="mt-5 flex flex-wrap gap-3">
-          <button type="button" className="btn btn-primary" disabled={busy || phase === "reading"} onClick={() => void complete()}>
+          <button type="button" className="btn btn-primary" disabled={busy || phase === "reading"} onClick={loggedIn}>
             {phase === "reading" ? "Reading…" : "I’m logged in, read my score"}
+          </button>
+        </div>
+      ) : null}
+
+      {phase === "handoff" && smsHref ? (
+        <div className="mt-5 flex flex-wrap gap-3">
+          <a className="btn btn-primary" href={smsHref}>
+            Open Messages again
+          </a>
+          <button type="button" className="btn btn-ghost" disabled={busy} onClick={() => void complete()}>
+            Read it here instead
           </button>
         </div>
       ) : null}

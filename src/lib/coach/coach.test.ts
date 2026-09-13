@@ -116,6 +116,16 @@ describe("text", () => {
   });
 });
 
+describe("sms deep link", () => {
+  it("drafts the logged-in note for Messages", async () => {
+    const { smsDraftHref, LOGGED_IN_DRAFT } = await import("../sms");
+    const href = smsDraftHref("+19293649402", LOGGED_IN_DRAFT);
+    assert.ok(href.startsWith("sms:+19293649402?&body="));
+    assert.equal(decodeURIComponent(href.split("body=")[1]), LOGGED_IN_DRAFT);
+    assert.match(LOGGED_IN_DRAFT, /logged in/i);
+  });
+});
+
 describe("score page", () => {
   it("detects login pages and score pages", async () => {
     const { looksLikeLoginPage, scoreDelta, isHandoffPage, connectedNote, scoreLine } = await import("./score-page");

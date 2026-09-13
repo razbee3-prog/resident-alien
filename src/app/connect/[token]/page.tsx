@@ -4,6 +4,8 @@ import { Container } from "@/components/ui";
 import { browserEnabled } from "@/lib/coach/browser-flag";
 import { coachAvailable } from "@/lib/coach/db";
 import * as store from "@/lib/coach/store";
+import { site } from "@/lib/site";
+import { LOGGED_IN_DRAFT, smsDraftHref } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Connect Credit Karma · Credit Alien", robots: { index: false, follow: false } };
@@ -25,7 +27,7 @@ export default async function ConnectPage({ params }: { params: Promise<{ token:
         ) : expired ? (
           <Notice title="This link expired." body="Links last 15 minutes. Text Credit Alien “check my score” and it will send a new one." />
         ) : (
-          <ConnectClient token={token} />
+          <ConnectClient token={token} smsHref={site.chatNumber ? smsDraftHref(site.chatNumber, LOGGED_IN_DRAFT) : null} />
         )}
       </div>
     </Container>

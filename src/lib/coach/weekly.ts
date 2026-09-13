@@ -50,14 +50,17 @@ export async function runWeeklyCheckin(user: CoachUser, provider: MessagingProvi
 
 export type ConnectionRead =
   | { kind: "fresh"; line: string; note: string; score: number | null; previous: number | null; material: boolean }
-  | { kind: "relogin"; line: string; linkUrl: string };
+  | { kind: "relogin"; line: string; linkUrl: string }
+  | { kind: "login_pending"; line: string; linkUrl: string; notes: string };
 
 /**
  * Re-read the score through the stored Credit Karma session and record a snapshot. `line` is the one-line form for a
  * prompt; `note` is the fuller read the coach presents from. Null when there is nothing to read through. Never throws.
  * `allowPending` also tries a connection whose link was opened but never completed (the user logged in; the read failed).
+ * `liveLink` reads a link the user has open right now in place (the session they just logged into on their phone): its
+ * cookies reach the saved context only when that session ends, and "I'm logged in" means that browser, not a new one.
  */
-export async function readThroughConnection(user: CoachUser, opts: { timeoutMs?: number; relinkTtlMinutes?: number; allowPending?: boolean } = {}): Promise<ConnectionRead | null> {
+export async function readThroughConnection(user: CoachUser, opts: { timeoutMs?: number; relinkTtlMinutes?: number; allowPending?: boolean; liveLink?: boolean } = {}): Promise<ConnectionRead | null> {
   if (!browserEnabled) return null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -67,9 +70,18 @@ export async function readThroughConnection(user: CoachUser, opts: { timeoutMs?:
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new Error("refresh timed out")), opts.timeoutMs ?? 90_000);
     });
-    const { refreshConnection } = await import("./browser");
-    const read = await Promise.race([refreshConnection(conn.context_id), timeout]);
+    const browser = await import("./browser");
+    const open = opts.liveLink
+      ? (await store.listOpenLinkTokens(user.id))
+          .filter((l) => l.connect_url && l.session_id && new Date(l.expires_at).getTime() > Date.now())
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+      : undefined;
+    const read = await Promise.race([open ? browser.captureAndRead(open.connect_url!) : browser.refreshConnection(conn.context_id), timeout]);
     if (!read.loggedIn) {
+      if (open) {
+        const notes = read.reason ?? read.extraction?.notes ?? "still on the login page";
+        return { kind: "login_pending", linkUrl: `${site.url}/connect/${open.token}`, notes, line: `Credit Karma link is open but the login is not finished (${notes})` };
+      }
       if (conn.status === "active") await store.updateConnection(conn.id, { status: "needs_relogin", last_error: read.reason ?? read.extraction?.notes ?? "login page" });
       const ttl = opts.relinkTtlMinutes ?? 60 * 24;
       const link = await store.issueLinkToken(user.id, conn.id, ttl);
@@ -80,6 +92,11 @@ export async function readThroughConnection(user: CoachUser, opts: { timeoutMs?:
     const previous = (await store.listSnapshots(user.id, 1))[0] ?? null;
     await store.insertSnapshot(user.id, { source: "credit_karma_browser", score: x.score, score_model: x.score_model, bureau: x.bureau, as_of: x.as_of, confidence: x.confidence, extract: x });
     await store.updateConnection(conn.id, { status: "active", last_ok_at: new Date().toISOString(), last_error: null });
+    if (open) {
+      // Done with the login browser: closing it saves the cookies for the weekly re-read.
+      await store.updateLinkToken(open.token, { status: "completed" });
+      await browser.releaseSession(open.session_id!);
+    }
     const { delta, material } = scoreDelta(x.score, previous?.score ?? null);
     const line = `score ${scoreLine(x)}; previous ${previous?.score ?? "none"}${delta !== null ? ` (${delta >= 0 ? "+" : ""}${delta})` : ""}; ${material ? "MATERIAL" : "not material"}`;
     return { kind: "fresh", line, note: connectedNote(x), score: x.score, previous: previous?.score ?? null, material };
