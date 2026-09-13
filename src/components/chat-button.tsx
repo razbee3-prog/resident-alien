@@ -9,7 +9,7 @@ import { usePrefs } from "@/lib/prefs";
  * segment and country prefilled so the coach can skip a question. On other desktops it opens a panel with a QR
  * code and the number.
  */
-export function ChatButton({ number, qrSvg, className = "" }: { number: string; qrSvg: string; className?: string }) {
+export function ChatButton({ number, qrSvg, size = "md", className = "" }: { number: string; qrSvg: string; size?: "md" | "lg"; className?: string }) {
   const prefs = usePrefs();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -41,7 +41,7 @@ export function ChatButton({ number, qrSvg, className = "" }: { number: string; 
     <>
       <a
         href={href}
-        className={`btn btn-ghost border-accent/40 hover:border-accent ${className}`}
+        className={`btn btn-ghost ${size === "lg" ? "btn-lg" : ""} border-accent/40 hover:border-accent ${className}`}
         onClick={(e) => {
           // Messages exists on Apple platforms and Android; elsewhere show the QR panel instead of a dead link.
           if (!/iPhone|iPad|iPod|Macintosh|Android/i.test(navigator.userAgent)) {

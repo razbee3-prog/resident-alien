@@ -10,7 +10,8 @@ const cfg = {
   keyId: process.env.SENDBLUE_API_KEY_ID || process.env.SENDBLUE_API_KEY,
   secret: process.env.SENDBLUE_API_SECRET_KEY || process.env.SENDBLUE_SECRET,
   number: process.env.SENDBLUE_NUMBER || process.env.NEXT_PUBLIC_SENDBLUE_NUMBER,
-  webhookSecret: process.env.SENDBLUE_WEBHOOK_SECRET,
+  /** Falls back to the API secret, which is what the Sendblue dashboard uses as the webhook secret by default. */
+  webhookSecret: process.env.SENDBLUE_WEBHOOK_SECRET || process.env.SENDBLUE_API_SECRET_KEY || process.env.SENDBLUE_SECRET,
   dryRun: process.env.SENDBLUE_DRY_RUN === "1" || process.env.SENDBLUE_DRY_RUN === "true",
 };
 

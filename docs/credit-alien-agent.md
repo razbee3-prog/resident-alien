@@ -77,7 +77,7 @@ Local development without Supabase writes the same tables to `.data/coach/*.json
 
 1. Run `supabase/schema.sql` in the Supabase SQL editor (idempotent).
 2. Set env vars (see `.env.example`): `ANTHROPIC_API_KEY` (or `ANTHROPIC_KEY`), `SENDBLUE_API_KEY` (or `SENDBLUE_API_KEY_ID`), `SENDBLUE_SECRET` (or `SENDBLUE_API_SECRET_KEY`), `SENDBLUE_NUMBER`, `SENDBLUE_WEBHOOK_SECRET`, `CRON_SECRET`. `SENDBLUE_BASE_URL` is optional.
-3. In Sendblue → Developer → Webhooks, add `https://<your-domain>/api/sendblue/webhook` with the same secret you put in `SENDBLUE_WEBHOOK_SECRET`.
+3. In Sendblue → Developer → Webhooks, add `https://<your-domain>/api/sendblue/webhook`. Its secret must match `SENDBLUE_WEBHOOK_SECRET`, or the API secret when that is unset (the dashboard default).
 4. Deploy. `vercel.json` schedules `/api/cron/tick` daily at 16:00 UTC (Hobby allows one run a day; the job decides per user whether a weekly check-in is due). Vercel sends `Authorization: Bearer $CRON_SECRET`.
 5. The hero button appears once `SENDBLUE_NUMBER` is set (it is read at build time, so redeploy after adding it).
 

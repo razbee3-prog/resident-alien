@@ -9,6 +9,7 @@ import { nav } from "@/lib/site";
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const waitlistHref = pathname === "/" ? "#waitlist" : "/waitlist";
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -42,7 +43,7 @@ export function Nav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link href="/waitlist" className="btn btn-primary btn-sm hidden sm:inline-flex">
+          <Link href={waitlistHref} className="btn btn-primary btn-sm hidden sm:inline-flex">
             Join the waitlist
           </Link>
           <button
@@ -65,7 +66,7 @@ export function Nav() {
                 {item.label}
               </Link>
             ))}
-            <Link href="/waitlist" className="btn btn-primary mt-3" onClick={() => setOpen(false)}>
+            <Link href={waitlistHref} className="btn btn-primary mt-3" onClick={() => setOpen(false)}>
               Join the waitlist
             </Link>
           </Container>

@@ -1,11 +1,9 @@
 import { SingleCard } from "@/components/card/single-card";
-import { Coach } from "@/components/sections/coach";
 import { Cta } from "@/components/sections/cta";
 import { Faq } from "@/components/sections/faq";
 import { Ladder, type Rung } from "@/components/sections/ladder";
-import { ButtonLink, Container, Eyebrow, Heading, Section } from "@/components/ui";
+import { ButtonLink, Container, Section } from "@/components/ui";
 import { segments, type Segment } from "@/lib/segments";
-import { disclosures } from "@/lib/site";
 
 function toRungs(timeline: { month: string; step: string }[]): Rung[] {
   return timeline.map((t) => {
@@ -22,60 +20,56 @@ export function SegmentPage({ segment }: { segment: Segment }) {
       <section className="relative overflow-hidden">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-[-10%] top-[-10%] h-[70%] w-[60%] rounded-full opacity-60 blur-3xl"
+          className="pointer-events-none absolute left-1/2 top-[40%] h-[640px] w-[800px] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
           style={{ background: "radial-gradient(closest-side, rgba(135,133,255,.14), transparent 70%)" }}
         />
-        <Container className="relative grid items-center gap-14 py-16 md:py-24 lg:grid-cols-[1.1fr_1fr]">
-          <div className="animate-rise">
-            <Eyebrow>Resident Alien for {s.plural.toLowerCase()}</Eyebrow>
-            <h1 className="mt-5 text-[2.6rem] font-bold leading-[1] tracking-[-0.035em] sm:text-[3.4rem] md:text-[4rem]">{s.headline}</h1>
-            <p className="mt-7 max-w-[36rem] text-lg leading-relaxed text-muted md:text-xl">{s.sub}</p>
-            <div className="mt-9 flex flex-wrap items-center gap-3">
-              <ButtonLink href="/waitlist">Join the waitlist</ButtonLink>
-              <ButtonLink href="/demo" variant="ghost">
-                Run the readiness demo
-              </ButtonLink>
-            </div>
-            <p className="mt-6 font-mono text-[0.7rem] uppercase tracking-[0.1em] text-faint">{disclosures.short}</p>
+        <Container className="relative pb-6 pt-16 text-center md:pt-24">
+          <p className="text-sm text-muted">For {s.plural.toLowerCase()}</p>
+          <h1 className="mx-auto mt-4 max-w-[14ch] text-[2.8rem] font-bold leading-[0.98] tracking-[-0.04em] sm:text-[4rem] md:text-[5rem]">{s.headline}</h1>
+          <p className="mx-auto mt-6 max-w-[30rem] text-lg leading-snug text-muted md:text-[1.25rem]">{s.sub}</p>
+          <div className="mt-9 flex justify-center">
+            <ButtonLink href="/waitlist" size="lg">
+              Join the waitlist
+            </ButtonLink>
           </div>
-          <div className="animate-rise [animation-delay:120ms]">
+          <div className="mt-14">
             <SingleCard segment={segment} />
           </div>
         </Container>
       </section>
 
-      <Section id="evidence">
-        <Container className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
-          <Heading eyebrow="What we read" title="Evidence, not a score." lede={`A bureau sees nothing. We read what a ${s.label.toLowerCase()} actually arrives with.`} />
-          <dl className="grid gap-px overflow-hidden rounded-[1.25rem] border border-hairline bg-hairline">
-            <Row label="Evidence">
-              <ul className="flex flex-col gap-1">
-                {s.evidence.map((e) => (
+      <Section className="pt-10 md:pt-16">
+        <Container>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="panel p-8">
+              <p className="text-sm text-muted">What counts</p>
+              <ul className="mt-4 flex flex-col gap-2 text-[1.05rem] font-medium text-ink">
+                {s.evidence.slice(0, 3).map((e) => (
                   <li key={e}>{e}</li>
                 ))}
               </ul>
-            </Row>
-            <Row label="Starter line, illustrative">
-              <span className="num font-display text-2xl font-bold tracking-[-0.02em]">{s.limit}</span>
-            </Row>
-            <Row label="First unlock">{s.unlock}</Row>
-            <Row label="Coach focus">{s.coachFocus}</Row>
-            <Row label="Risk we plan for">{s.risk}</Row>
-          </dl>
+            </div>
+            <div className="panel p-8">
+              <p className="text-sm text-muted">To start, illustrative</p>
+              <p className="num mt-4 font-display text-[2.4rem] font-bold leading-none tracking-[-0.04em]">{s.limit}</p>
+            </div>
+            <div className="panel p-8">
+              <p className="text-sm text-muted">First unlock</p>
+              <p className="mt-4 text-[1.05rem] font-medium text-ink">{s.unlock}</p>
+            </div>
+          </div>
         </Container>
       </Section>
 
-      <Ladder rungs={toRungs(s.timeline)} eyebrow="The timeline" title={`The ${s.label.toLowerCase()} path, month by month.`} lede="Typical, not promised. Every step depends on on-time payments and the evidence staying true." />
+      <Ladder rungs={toRungs(s.timeline)} title="Month by month." lede="" />
+      <Faq items={s.faq} title={`Questions ${s.plural.toLowerCase()} ask.`} />
 
-      <Coach />
-      <Faq items={s.faq} title={`Questions ${s.plural.toLowerCase()} ask first.`} />
-
-      <section className="border-t border-hairline py-10">
+      <section className="border-t border-hairline py-8">
         <Container>
           <p className="text-sm text-muted">
             Not a {s.label.toLowerCase()}?{" "}
             <a href={other.href} className="text-ink underline decoration-hairline-strong underline-offset-4 hover:decoration-ink">
-              See the {other.label.toLowerCase()} path
+              See the {other.label.toLowerCase()} card
             </a>
             .
           </p>
@@ -83,14 +77,5 @@ export function SegmentPage({ segment }: { segment: Segment }) {
       </section>
       <Cta />
     </>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1.5 bg-surface p-6 sm:grid-cols-[12rem_1fr] sm:gap-6">
-      <dt className="eyebrow pt-1">{label}</dt>
-      <dd className="text-[0.95rem] leading-relaxed text-ink/90">{children}</dd>
-    </div>
   );
 }

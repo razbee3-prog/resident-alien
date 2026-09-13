@@ -1,17 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { countries, flagSrc, type Country } from "@/lib/countries";
 
 type Props = {
   value: Country;
   onChange: (c: Country) => void;
   label?: string;
+  variant?: "field" | "pill";
   className?: string;
 };
 
-export function CountryPicker({ value, onChange, label = "Where are you from?", className = "" }: Props) {
+export function CountryPicker({ value, onChange, label = "Where are you from?", variant = "field", className = "" }: Props) {
   const id = useId();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -19,6 +20,7 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const blurTimer = useRef(0);
+  const pill = variant === "pill";
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -28,12 +30,6 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
       .slice(0, 8);
   }, [query]);
 
-  useEffect(() => {
-    if (!open) return;
-    const el = listRef.current?.children[active] as HTMLElement | undefined;
-    el?.scrollIntoView({ block: "nearest" });
-  }, [active, open]);
-
   function choose(c: Country) {
     onChange(c);
     setQuery("");
@@ -42,12 +38,12 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
   }
 
   return (
-    <div className={`relative ${className}`}>
-      <label htmlFor={`${id}-input`} className="label">
+    <div className={`relative ${pill ? "inline-flex flex-col items-center" : ""} ${className}`}>
+      <label htmlFor={`${id}-input`} className={pill ? "mb-2 text-sm text-muted" : "label"}>
         {label}
       </label>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 overflow-hidden rounded-[3px] border border-hairline-strong">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 overflow-hidden rounded-[3px] border border-hairline-strong">
           <Image src={flagSrc(value.a2)} alt="" width={24} height={16} unoptimized className="block h-4 w-6 object-cover" />
         </span>
         <input
@@ -58,7 +54,7 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
           aria-controls={`${id}-list`}
           aria-autocomplete="list"
           aria-activedescendant={open ? `${id}-opt-${active}` : undefined}
-          className="field pl-12 pr-16"
+          className={pill ? "h-12 w-[280px] rounded-full border border-hairline-strong bg-surface pl-14 pr-14 text-[0.95rem] text-ink shadow-[inset_0_1px_0_rgba(255,255,255,.05)] placeholder:text-ink focus:outline-none focus-visible:outline-2 focus-visible:outline-accent" : "field pl-12 pr-16"}
           placeholder={value.name}
           value={query}
           autoComplete="off"
@@ -93,7 +89,7 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
             }
           }}
         />
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[0.7rem] tracking-[0.12em] text-muted">
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 font-mono text-[0.7rem] tracking-[0.12em] text-muted">
           {value.a3}
         </span>
       </div>
@@ -103,10 +99,10 @@ export function CountryPicker({ value, onChange, label = "Where are you from?", 
           ref={listRef}
           id={`${id}-list`}
           role="listbox"
-          className="panel-2 absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-72 overflow-auto py-1.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,.9)]"
+          className={`panel-2 absolute top-[calc(100%+6px)] z-30 max-h-72 overflow-auto py-1.5 shadow-[0_30px_60px_-20px_rgba(0,0,0,.9)] ${pill ? "left-1/2 w-[300px] -translate-x-1/2" : "left-0 right-0"}`}
         >
           {results.length === 0 ? (
-            <li className="px-3 py-2.5 text-sm text-muted">No country matches “{query}”. Try the English name or a three-letter code.</li>
+            <li className="px-3 py-2.5 text-sm text-muted">No match for “{query}”. Try the English name.</li>
           ) : (
             results.map((c, i) => (
               <li

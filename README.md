@@ -1,8 +1,7 @@
 # Resident Alien — resident-alien.com
 
 Credit for people who just got here. A starter U.S. credit line on day one for international students and newly arrived
-professionals, then a coached path toward premium-card eligibility. This repository is the marketing site, the explainable
-readiness-engine demo, and the community safety center.
+professionals, then a coached path toward premium-card eligibility. This repository is the marketing site and the community safety center.
 
 Plan and positioning: [`docs/website-plan.md`](docs/website-plan.md). Original brief: [`docs/perplexity-brief.md`](docs/perplexity-brief.md).
 
@@ -21,10 +20,8 @@ Node 20+ (built on 22). Next.js 16, React 19, Tailwind v4, TypeScript.
 
 | Route | What it is |
 |---|---|
-| `/` | Landing: both cards in the hero with a country picker, the path to Platinum/Reserve, two segments side by side, coach dashboard, live demo slice, FAQ, waitlist |
-| `/students`, `/professionals` | Segment pages: evidence, month-by-month timeline, FAQ |
-| `/how-it-works` | Four steps, AI guardrails |
-| `/demo` | Explainable Financial Readiness Engine. Deterministic rules in `src/lib/readiness.ts`; fictional inputs only |
+| `/` | Landing: brand line, both cards with a country picker, three benefits, two segments, one stat, safety line, waitlist |
+| `/students`, `/professionals` | Segment pages: one card, what counts, month-by-month timeline, FAQ |
 | `/safety` | Crowdsourced enforcement-activity map, rights, hotlines |
 | `/waitlist`, `/about`, `/legal/*` | Form, mission, disclosures / privacy / terms |
 | `/api/waitlist` | POST. Stores a signup |
@@ -59,13 +56,9 @@ Built for awareness, not intervention. Reports carry a category, a note, and a l
 like plates, phone numbers, emails, links, or handles are rejected server-side. Reports expire after four hours. There are no
 accounts; a daily-salted hash of the connection address exists only for rate limiting (3 reports/hour, 5 signups/hour).
 
-Map tiles come from CARTO's dark basemap (free tier, attribution required). For real traffic switch to a paid CARTO plan,
-MapTiler, or self-hosted OpenFreeMap tiles in `src/components/safety/safety-map.tsx`.
-
-MapLibre spawns a module web worker from a URL relative to its own bundle, which the app bundler doesn't preserve, so the
-worker would load the page HTML and die (no reports would ever render). `scripts/copy-maplibre-worker.mjs` runs before
-`dev` and `build`, copies the worker and shared modules into `public/vendor/` (git-ignored), and the map points at them
-with `setWorkerUrl`.
+The map is a static SVG of the United States (Albers USA projection generated from us-atlas into `src/lib/us-states.json`). Hotspots
+in `src/lib/hotspots.ts` are illustrative, based on publicly reported operations, and are not live data. Community reports are
+projected onto the same map with d3-geo. No tile provider or API key is needed.
 
 ## Design system
 

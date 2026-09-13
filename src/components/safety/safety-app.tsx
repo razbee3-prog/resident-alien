@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
-import { SafetyMap, type Focus, type LatLng } from "@/components/safety/safety-map";
+import { USMap, type LatLng } from "@/components/safety/us-map";
 import { Button, Pill } from "@/components/ui";
 import { relativeTime } from "@/lib/format";
+import { hotspotsContext } from "@/lib/hotspots";
 import { categories, categoryColor, categoryLabel, EXPIRY_HOURS, NOTE_MAX, noteProblem, placeLabel, roundCoord, type Category, type Report } from "@/lib/safety";
 
 type Mode = "live" | "local" | "demo";
@@ -20,7 +21,6 @@ export function SafetyApp() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [posted, setPosted] = useState<string | null>(null);
-  const [focus, setFocus] = useState<Focus | null>(null);
   const [confirmed, setConfirmed] = useState<Set<string>>(() => new Set());
   const [tick, setTick] = useState(0);
 
@@ -61,9 +61,7 @@ export function SafetyApp() {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const p = { lat: roundCoord(pos.coords.latitude), lng: roundCoord(pos.coords.longitude) };
-        setPending(p);
-        setFocus({ ...p, zoom: 13, key: Date.now() });
+        setPending({ lat: roundCoord(pos.coords.latitude), lng: roundCoord(pos.coords.longitude) });
         setFormError(null);
       },
       () => setFormError("Location was blocked. Tap the map where it happened instead."),
@@ -115,23 +113,20 @@ export function SafetyApp() {
   void tick;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-      <div className="panel relative h-[460px] overflow-hidden lg:h-[720px]">
-        <SafetyMap reports={reports} pending={pending} onPick={onPick} focus={focus} className="absolute inset-0" />
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2">
-          {mode === "demo" ? <Pill tone="warn">Demo data · resets on restart</Pill> : null}
-          {mode === "local" ? <Pill tone="muted">Local file storage</Pill> : null}
+    <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+      <div className="panel overflow-hidden">
+        <USMap reports={reports} pending={pending} onPick={onPick} />
+        <div className="flex flex-wrap items-center gap-2 border-t border-hairline px-5 py-3">
+          <p className="text-xs text-muted">{hotspotsContext}</p>
+          {mode === "demo" ? <Pill tone="warn">Demo data</Pill> : null}
           {loadError ? <Pill tone="bad">{loadError}</Pill> : null}
-        </div>
-        <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg border border-hairline bg-ground/80 px-3 py-2 text-[0.72rem] text-muted backdrop-blur">
-          Tap the map to place a report. Drag the pin to adjust.
         </div>
       </div>
 
       <div className="flex min-h-0 flex-col gap-4">
         <form onSubmit={submit} className="panel flex flex-col gap-4 p-5" noValidate>
           <div className="flex items-center justify-between">
-            <p className="eyebrow">Report activity</p>
+            <p className="text-sm font-medium text-ink">Report activity</p>
             <button type="button" onClick={useMyLocation} className="text-xs text-accent hover:underline">
               Use my location
             </button>
@@ -139,12 +134,7 @@ export function SafetyApp() {
 
           <div className="rounded-xl border border-dashed border-hairline-strong px-3.5 py-2.5 text-sm">
             {pending ? (
-              <span className="text-ink">
-                {placeLabel(pending.lat, pending.lng)}{" "}
-                <span className="num text-faint">
-                  · {pending.lat.toFixed(3)}, {pending.lng.toFixed(3)}
-                </span>
-              </span>
+              <span className="text-ink">{placeLabel(pending.lat, pending.lng)}</span>
             ) : (
               <span className="text-muted">No location yet. Tap the map where it happened.</span>
             )}
@@ -181,7 +171,7 @@ export function SafetyApp() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <p className="mt-1.5 text-xs text-faint">No names, faces, plates, or phone numbers. Notes that identify a person are rejected.</p>
+            <p className="mt-1.5 text-xs text-faint">No names, faces, plates, or phone numbers.</p>
           </div>
 
           <label className="flex cursor-pointer items-start gap-3 text-sm text-muted">
@@ -208,12 +198,12 @@ export function SafetyApp() {
 
         <div className="panel flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
-            <p className="eyebrow">Last {EXPIRY_HOURS} hours</p>
-            <span className="num text-xs text-muted">{reports.length} reports</span>
+            <p className="text-sm font-medium text-ink">Community reports, last {EXPIRY_HOURS} hours</p>
+            <span className="num text-xs text-muted">{reports.length}</span>
           </div>
-          <ul className="flex flex-col divide-y divide-hairline overflow-auto lg:max-h-[380px]">
+          <ul className="flex flex-col divide-y divide-hairline overflow-auto lg:max-h-[360px]">
             {reports.length === 0 ? (
-              <li className="px-5 py-6 text-sm text-muted">{mode ? "Nothing reported in the last few hours. Quiet is good." : "Loading reports…"}</li>
+              <li className="px-5 py-6 text-sm text-muted">{mode ? "Nothing reported in the last few hours." : "Loading reports…"}</li>
             ) : (
               reports.map((r) => (
                 <li key={r.id} className="flex flex-col gap-2 px-5 py-4">
@@ -224,19 +214,14 @@ export function SafetyApp() {
                   </div>
                   <p className="text-xs text-muted">{placeLabel(r.lat, r.lng)}</p>
                   <p className="text-sm leading-relaxed text-ink/90">{r.note}</p>
-                  <div className="flex items-center gap-4 text-xs">
-                    <button
-                      type="button"
-                      className={`rounded-md border px-2.5 py-1 transition-colors ${confirmed.has(r.id) ? "border-good/40 text-good" : "border-hairline-strong text-muted hover:text-ink"}`}
-                      onClick={() => confirm(r)}
-                      disabled={confirmed.has(r.id)}
-                    >
-                      {confirmed.has(r.id) ? "Confirmed" : "I saw this too"} · {r.confirmations}
-                    </button>
-                    <button type="button" className="text-muted hover:text-ink" onClick={() => setFocus({ lat: r.lat, lng: r.lng, zoom: 13, key: Date.now() })}>
-                      Show on map
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className={`self-start rounded-md border px-2.5 py-1 text-xs transition-colors ${confirmed.has(r.id) ? "border-good/40 text-good" : "border-hairline-strong text-muted hover:text-ink"}`}
+                    onClick={() => confirm(r)}
+                    disabled={confirmed.has(r.id)}
+                  >
+                    {confirmed.has(r.id) ? "Confirmed" : "I saw this too"} · {r.confirmations}
+                  </button>
                 </li>
               ))
             )}

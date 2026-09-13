@@ -49,7 +49,7 @@ export function Heading({
 
 type ButtonProps = {
   variant?: "primary" | "ghost";
-  size?: "md" | "sm";
+  size?: "md" | "sm" | "lg";
   className?: string;
   children: ReactNode;
 };
@@ -62,7 +62,7 @@ export function ButtonLink({
   ...rest
 }: ButtonProps & ComponentProps<typeof Link>) {
   return (
-    <Link className={`btn btn-${variant} ${size === "sm" ? "btn-sm" : ""} ${className}`} {...rest}>
+    <Link className={`btn btn-${variant} ${size === "sm" ? "btn-sm" : size === "lg" ? "btn-lg" : ""} ${className}`} {...rest}>
       {children}
     </Link>
   );
@@ -76,7 +76,7 @@ export function Button({
   ...rest
 }: ButtonProps & ComponentProps<"button">) {
   return (
-    <button className={`btn btn-${variant} ${size === "sm" ? "btn-sm" : ""} ${className}`} {...rest}>
+    <button className={`btn btn-${variant} ${size === "sm" ? "btn-sm" : size === "lg" ? "btn-lg" : ""} ${className}`} {...rest}>
       {children}
     </button>
   );

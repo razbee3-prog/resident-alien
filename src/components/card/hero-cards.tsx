@@ -8,54 +8,36 @@ import type { Segment } from "@/lib/segments";
 
 const ORDER: Segment[] = ["student", "professional"];
 
-export function HeroCards({ initialFront = "professional" }: { initialFront?: Segment }) {
+export function HeroCards() {
   const prefs = usePrefs();
   const country = findCountry(prefs.country) ?? defaultCountry;
-  const front = prefs.segment ?? initialFront;
+  const front = prefs.segment ?? "professional";
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="relative h-[520px] w-[300px] sm:h-[580px] sm:w-[340px]">
+    <div className="flex flex-col items-center">
+      <CountryPicker variant="pill" label="Moving from" value={country} onChange={(c) => setPref("country", c.a2)} />
+      <div className="relative mt-10 h-[400px] w-full max-w-[760px] sm:h-[540px] md:h-[590px]">
         {ORDER.map((seg) => {
           const isFront = seg === front;
+          const student = seg === "student";
           return (
             <button
               key={seg}
               type="button"
               onClick={() => setPref("segment", seg)}
-              aria-label={isFront ? `${seg} card, in front` : `Bring the ${seg} card to the front`}
+              aria-label={`${seg} card${isFront ? ", in front" : ""}`}
               aria-pressed={isFront}
-              className="absolute left-0 top-0 w-[78%] rounded-[24px] border-0 bg-transparent p-0 text-left transition-[transform,filter] duration-700 ease-[cubic-bezier(.16,1,.3,1)] focus-visible:outline-offset-8"
-              style={
-                isFront
-                  ? { transform: "translate(24%, 7%) rotate(5deg)", zIndex: 2, filter: "none" }
-                  : { transform: "translate(-2%, 0%) rotate(-10deg) scale(0.93)", zIndex: 1, filter: "brightness(.62) saturate(.9)" }
-              }
+              className="absolute left-1/2 top-0 w-[224px] rounded-[24px] border-0 bg-transparent p-0 text-left transition-[transform,filter] duration-700 ease-[cubic-bezier(.16,1,.3,1)] focus-visible:outline-offset-8 sm:w-[300px] md:w-[330px]"
+              style={{
+                transform: `translateX(${student ? "-90%" : "-10%"}) translateY(${isFront ? "0px" : "22px"}) rotate(${student ? "-7deg" : "6deg"})`,
+                zIndex: isFront ? 2 : 1,
+                filter: isFront ? "none" : "brightness(.8)",
+              }}
             >
-              <ResidentCard segment={seg} country={country} interactive={isFront} />
+              <ResidentCard segment={seg} country={country} />
             </button>
           );
         })}
-      </div>
-
-      <div className="w-full max-w-[340px]">
-        <div className="mb-4 flex rounded-xl border border-hairline bg-surface p-1" role="group" aria-label="Which card is in front">
-          {ORDER.map((seg) => (
-            <button
-              key={seg}
-              type="button"
-              aria-pressed={front === seg}
-              onClick={() => setPref("segment", seg)}
-              className={`h-10 flex-1 rounded-lg text-sm font-medium transition-colors ${
-                front === seg ? "bg-ink text-ground" : "text-muted hover:text-ink"
-              }`}
-            >
-              {seg === "student" ? "Student" : "Professional"}
-            </button>
-          ))}
-        </div>
-        <CountryPicker value={country} onChange={(c) => setPref("country", c.a2)} />
-        <p className="mt-2 text-xs text-faint">Your pick is remembered and pre-fills the waitlist.</p>
       </div>
     </div>
   );
